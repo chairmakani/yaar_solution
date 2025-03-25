@@ -1,0 +1,106 @@
+.ngo-detail-container {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.ngo-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.ngo-header h1 {
+    color: #2c3e50;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.ngo-content {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.ngo-image {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.ngo-image img {
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.ngo-image:hover img {
+    transform: scale(1.05);
+}
+
+.ngo-details {
+    flex: 1;
+    min-width: 300px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.detail-item {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    color: #2c3e50;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.contact-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    text-decoration: none;
+    margin-top: 20px;
+}
+
+.contact-button:hover {
+    background: #2980b9;
+}
+
+.price-tag {
+    font-size: 1.5em;
+    color: #e74c3c;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+    .ngo-content {
+        flex-direction: column;
+    }
+    
+    .ngo-image, .ngo-details {
+        min-width: 100%;
+    }
+}

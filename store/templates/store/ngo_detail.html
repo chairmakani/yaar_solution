@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ ngo.shg_name }} - YAAR SOLUTION{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/ngo_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% endblock %}
+
+{% block content2 %}
+<div class="ngo-detail-container">
+    <div class="ngo-header">
+        <h1>{{ ngo.shg_name }}</h1>
+        <p>{{ ngo.panchayat_name }}</p>
+    </div>
+
+    <div class="ngo-content">
+        <div class="ngo-image">
+            {% if ngo.image %}
+                <img src="{{ ngo.image.url }}" alt="{{ ngo.product }}" id="ngo-image">
+            {% else %}
+                <img src="{% static 'images/default-ngo.jpg' %}" alt="Default Image">
+            {% endif %}
+        </div>
+
+        <div class="ngo-details">
+            <div class="detail-item">
+                <div class="detail-label">Product</div>
+                <div class="detail-value">{{ ngo.product }}</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Contact Person</div>
+                <div class="detail-value">{{ ngo.contact_person }}</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Mobile Number</div>
+                <div class="detail-value" id="mobile-number">{{ ngo.mobile_number }}</div>
+            </div>
+
+            <div class="price-tag">₹{{ ngo.price }}</div>
+
+            <a href="tel:{{ ngo.mobile_number }}" class="contact-button">
+                <i class="fas fa-phone"></i> Contact Now
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image zoom effect
+    const ngoImage = document.getElementById('ngo-image');
+    if (ngoImage) {
+        ngoImage.addEventListener('mousemove', function(e) {
+            const bounds = this.getBoundingClientRect();
+            const x = e.clientX - bounds.left;
+            const y = e.clientY - bounds.top;
+            
+            const xPercent = x / bounds.width;
+            const yPercent = y / bounds.height;
+            
+            this.style.transformOrigin = `${xPercent * 100}% ${yPercent * 100}%`;
+        });
+    }
+
+    // Mobile number formatting
+    const mobileNumber = document.getElementById('mobile-number');
+    if (mobileNumber) {
+        const number = mobileNumber.textContent.trim();
+        if (number.length === 10) {
+            mobileNumber.textContent = number.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+        }
+    }
+
+    // Add animation for contact button
+    const contactButton = document.querySelector('.contact-button');
+    if (contactButton) {
+        contactButton.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        contactButton.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    }
+});
+</script>
+{% endblock %}

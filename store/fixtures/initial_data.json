@@ -1,0 +1,33 @@
+[
+    {
+        "model": "store.location",
+        "pk": 1,
+        "fields": {
+            "name": "Default Location"
+        }
+    },
+    {
+        "model": "store.category",
+        "pk": 1,
+        "fields": {
+            "name": "General",
+            "description": "General category"
+        }
+    },
+    {
+        "model": "store.varianttype",
+        "pk": 1,
+        "fields": {
+            "name": "Weight",
+            "unit": "kg"
+        }
+    },
+    {
+        "model": "store.varianttype",
+        "pk": 2,
+        "fields": {
+            "name": "Volume",
+            "unit": "L"
+        }
+    }
+]

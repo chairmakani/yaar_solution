@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - YAAR SOLUTION{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+
+{% block content2 %}
+<div class="cart-wrapper">
+    <div class="container">
+        <h1 class="cart-title">
+            <i class="fas fa-shopping-cart"></i>
+            Shopping Cart
+        </h1>
+
+        <div class="cart-content">
+            {% if cart %}
+                <div class="cart-items">
+                    {% for key, item in cart.items %}
+                    <div class="cart-item" 
+                         data-item-key="{{ key }}"
+                         data-item-id="{{ item.product_id }}"
+                         data-product-id="{{ item.product_id }}"
+                         data-max-stock="{{ item.max_quantity }}"
+                         data-item-price="{{ item.price }}"
+                         {% if item.variant_id %}data-variant-id="{{ item.variant_id }}"{% endif %}>
+                        
+                        <div class="item-image">
+                            {% if item.image %}
+                                <img src="{{ item.image }}" alt="{{ item.name }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        
+                        <div class="item-details">
+                            <div class="item-info">
+                                <h3>{{ item.name }}</h3>
+                                {% if item.variant_id %}
+                                    <div class="variant-info {% if item.variant_id %}selected{% endif %}">
+                                        <div class="variant-badge">
+                                            <span class="variant-label">Selected:</span>
+                                            <span class="variant-value">
+                                                {% if item.variant.value|floatformat:0 == item.variant.value %}
+                                                    {{ item.variant.value|floatformat:0 }}{{ item.variant.unit }}
+                                                {% else %}
+                                                    {{ item.variant.value }}{{ item.variant.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="variant-price">
+                                            <span class="price-label">Price per unit:</span>
+                                            <span class="unit-price">₹{{ item.price }}</span>
+                                        </div>
+                                        <div class="stock-info">
+                                            <i class="fas {% if item.max_quantity > 10 %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                                            <span>{{ item.max_quantity }} available</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="pricing-info">
+                                    <span class="item-price" data-base-price="{{ item.price }}">₹{{ item.price }}</span>
+                                    {% if item.discount_percentage %}
+                                        <span class="discount-badge">-{{ item.discount_percentage }}%</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="item-controls">
+                                <div class="quantity-controls" data-item-key="{{ key }}">
+                                    <button type="button" class="qty-btn decrease" 
+                                            {% if item.quantity <= 1 %}disabled{% endif %}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                           class="quantity-input" 
+                                           value="{{ item.quantity }}"
+                                           min="1" 
+                                           max="{{ item.max_quantity }}"
+                                           data-item-key="{{ key }}"
+                                           readonly>
+                                    <button type="button" class="qty-btn increase" 
+                                            {% if item.quantity >= item.max_quantity %}disabled{% endif %}>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+
+                                <div class="price-summary">
+                                    <div class="subtotal-row">
+                                        <span class="label">Subtotal:</span>
+                                        <span class="item-total" data-base-price="{{ item.price }}">₹{{ item.total }}</span>
+                                    </div>
+                                    {% if item.savings %}
+                                    <div class="savings-row">
+                                        <span class="label">You Save:</span>
+                                        <span class="savings-amount">₹{{ item.savings }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <button class="remove-btn" 
+                                        data-item-key="{{ key }}"
+                                        title="Remove item">
+                                    <i class="fas fa-trash"></i>
+                                    <span class="remove-text">Remove</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="cart-summary">
+                    <h3>Order Summary</h3>
+                    <div class="summary-details">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>₹{{ subtotal }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span>₹{{ shipping }}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+                    </div>
+
+                    <button type="button" id="checkout-btn" class="checkout-btn">
+                        Proceed to Checkout
+                    </button>
+
+                    <a href="{% url 'store:home' %}" class="continue-shopping">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            {% else %}
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h2>Your cart is empty</h2>
+                    <p>Browse our products and add items to your cart</p>
+                    <a href="{% url 'store:home' %}" class="start-shopping">
+                        Start Shopping
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Remove Item Modal -->
+    <div class="modal" id="removeModal" hidden>
+        <div class="modal-content">
+            <h3>
+                <i class="fas fa-exclamation-circle"></i>
+                Remove Item
+            </h3>
+            <p>Are you sure you want to remove this item?</p>
+            <div class="modal-actions">
+                <button id="cancelRemove" class="btn-cancel">Cancel</button>
+                <button id="confirmRemove" class="btn-delete">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/cart.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cartUI = new CartUI();
+    
+    // Connect to global cart state
+    window.cartState.subscribe((cartData) => {
+        cartUI.updateCartDisplay(cartData);
+    });
+
+    // Handle checkout button
+    document.getElementById('checkout-btn')?.addEventListener('click', async function() {
+        try {
+            const response = await fetch("{% url 'store:checkout' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'proceed_to_checkout'
+                })
+            });
+
+            if (response.ok) {
+                window.location.href = "{% url 'store:checkout' %}";
+            } else {
+                throw new Error('Checkout failed');
+            }
+        } catch (error) {
+            NotificationManager.show('Error proceeding to checkout. Please try again.', 'error');
+        }
+    });
+});
+</script>
+{% endblock %}

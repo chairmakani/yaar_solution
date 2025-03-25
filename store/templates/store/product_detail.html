@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_filters %}
+
+{% block title %}{{ product.name }} - YAAR SOLUTION{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'css/quantity-controls.css' %}">
+{% endblock %}
+
+{% block content %}{{ block.super }}{% endblock %}
+
+{% block content2 %}
+<div class="breadcrumb">
+    <a href="{% url 'store:home' %}">Home</a> >
+    {% if product.category %}
+    <a href="{% url 'store:category_products' product.category.id %}">{{ product.category.name }}</a> >
+    {% endif %}
+    <span>{{ product.name }}</span>
+</div>
+
+<div class="product-detail-container">
+    <div class="product-gallery">
+        <div class="gallery-container">
+            <div class="thumbnails-vertical">
+                {% if product.primary_image %}
+                <img src="{{ product.primary_image.image.url }}" 
+                     alt="{{ product.primary_image.alt_text|default:product.name }}" 
+                     class="thumb active"
+                     data-full="{{ product.primary_image.image.url }}"
+                     loading="lazy">
+                {% endif %}
+                {% for image in product.additional_images %}
+                <img src="{{ image.image.url }}" 
+                     alt="{{ image.alt_text|default:product.name }}" 
+                     class="thumb"
+                     data-full="{{ image.image.url }}"
+                     loading="lazy">
+                {% endfor %}
+            </div>
+            <div class="main-image">
+                <img src="{{ product.primary_image.image.url|default:'placeholder.jpg' }}" 
+                     alt="{{ product.name }}" 
+                     id="mainImage"
+                     data-max-stock="{{ product.stock }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="product-info">
+        <h1 class="product-title">{{ product.name }}</h1>
+        
+        <!-- Add product type indicator -->
+        <div class="product-type {{ product.has_variants|yesno:'variant,standard' }}">
+            {{ product.has_variants|yesno:'Multiple Options,Standard Item' }}
+        </div>
+        
+        <div class="price-section">
+            <span class="current-price" id="display-price">₹{{ product.price }}</span>
+            {% if product.original_price %}
+            <span class="original-price">₹{{ product.original_price }}</span>
+            <span class="discount">{{ product.discount_percentage }}% OFF</span>
+            {% endif %}
+            <span class="tax-info">(Incl. of all taxes)</span>
+        </div>
+
+        {% if product.has_variants %}
+        <div class="variant-count">
+            <span>Available in {{ product.available_variants|length }} variants</span>
+        </div>
+        {% endif %}
+
+        <!-- Update variant selector -->
+        {% if product.has_variants %}
+        <div class="variant-selector">
+            <div class="variant-summary">
+                <span>Select your preferred option:</span>
+            </div>
+            <div class="variant-options">
+                {% for variant in product.variants.all %}
+                <div class="variant-choice">
+                    <input type="radio" 
+                           name="variant" 
+                           id="variant-{{ variant.id }}"
+                           value="{{ variant.id }}"
+                           data-price="{{ variant.price }}"
+                           data-stock="{{ variant.stock }}"
+                           {% if not variant.stock %}disabled{% endif %}
+                           required>
+                    <label class="variant-label" for="variant-{{ variant.id }}">
+                        <div class="variant-info">
+                            <span class="variant-name">{{ variant.name }}</span>
+                            <span class="variant-price">₹{{ variant.price }}</span>
+                        </div>
+                        <span class="stock-status {% if variant.stock > 5 %}in-stock{% elif variant.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                            {% if variant.stock > 5 %}
+                                In Stock
+                            {% elif variant.stock > 0 %}
+                                Only {{ variant.stock }} left
+                            {% else %}
+                                Out of Stock
+                            {% endif %}
+                        </span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="description">
+            {{ product.description|linebreaks }}
+        </div>
+
+        <div class="delivery-info">
+            <div class="delivery-item">
+                <i class="fas fa-truck"></i>
+                <span>Free Delivery</span>
+            </div>
+            <div class="delivery-item">
+                <i class="fas fa-undo"></i>
+                <span>30-Day Returns</span>
+            </div>
+            <div class="delivery-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Secure Payment</span>
+            </div>
+        </div>
+
+        <!-- Update add to cart button -->
+        <div class="product-actions">
+            <div class="actions-container">
+                <div class="quantity-selector" data-product-id="{{ product.id }}">
+                    <button class="qty-btn decrease" type="button" {% if not product.has_variants %}disabled{% endif %}>-</button>
+                    <input type="number" 
+                           class="quantity-input" 
+                           value="1" 
+                           min="1"
+                           readonly
+                           data-product-id="{{ product.id }}"
+                           data-product-name="{{ product.name }}"
+                           {% if product.has_variants %}
+                           data-max-stock="1"
+                           {% else %}
+                           data-max-stock="{{ product.stock }}"
+                           {% endif %}
+                           data-base-price="{{ product.price }}">
+                    <button class="qty-btn increase" type="button" {% if not product.has_variants %}disabled{% endif %}>+</button>
+                </div>
+                
+                <button class="add-to-cart-btn {% if product.has_variants %}select-options{% endif %}"
+                        data-product-id="{{ product.id }}"
+                        data-requires-variant="{{ product.has_variants|lower }}"
+                        {% if not product.has_variants and not product.stock %}disabled{% endif %}>
+                    <i class="fas fa-{% if product.has_variants %}list{% else %}cart-plus{% endif %}"></i>
+                    {% if product.has_variants %}
+                        Select Options
+                    {% else %}
+                        {% if product.stock > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="product-details-tabs">
+    <div class="tabs-header">
+        <button class="tab-btn active" data-tab="specifications">Specifications</button>
+        <button class="tab-btn" data-tab="reviews">Reviews</button>
+    </div>
+    <div class="tab-content active" id="specifications">
+        <!-- Add your product specifications here -->
+    </div>
+    <div class="tab-content" id="reviews">
+        <!-- Add your review section here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/quantity-manager.js' %}"></script>
+<script src="{% static 'js/product_detail.js' %}"></script>
+<script src="{% static 'js/cart-manager.js' %}"></script>
+<script>
+let selectedVariant = null;
+
+function updateSelectedVariant(variantId, price, stock) {
+    selectedVariant = {
+        id: variantId,
+        price: price,
+        stock: stock
+    };
+    
+    // Update quantity controls
+    const quantityInput = document.querySelector('.quantity-input');
+    const decreaseBtn = document.querySelector('.qty-btn.decrease');
+    const increaseBtn = document.querySelector('.qty-btn.increase');
+    
+    if (quantityInput) {
+        quantityInput.dataset.maxStock = stock;
+        quantityInput.value = 1;
+        
+        // Enable/disable quantity controls based on stock
+        decreaseBtn.disabled = true; // Always disabled at quantity 1
+        increaseBtn.disabled = stock <= 1;
+    }
+    
+    // Update add to cart button
+    const addToCartBtn = document.querySelector('.add-to-cart-btn');
+    if (addToCartBtn) {
+        addToCartBtn.dataset.variantId = variantId;
+        addToCartBtn.disabled = stock === 0;
+    }
+    
+    // Update price display
+    const displayPrice = document.getElementById('display-price');
+    if (displayPrice) {
+        displayPrice.textContent = `₹${price}`;
+    }
+}
+
+document.querySelector('.add-to-cart-btn').addEventListener('click', function(e) {
+    const requiresVariant = this.dataset.requiresVariant === 'true';
+    const productId = this.dataset.productId;
+    
+    if (requiresVariant && !selectedVariant) {
+        showNotification('Please select a variant first', 'warning');
+        return;
+    }
+    
+    const quantity = parseInt(document.querySelector('.quantity-input').value);
+    const data = {
+        product_id: productId,
+        quantity: quantity
+    };
+    
+    if (selectedVariant) {
+        data.variant_id = selectedVariant.id;
+    }
+    
+    // Add to cart AJAX call
+    fetch('/api/cart/add/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Added to cart successfully', 'success');
+            updateCartDisplay(data.cart);
+        } else {
+            showNotification(data.message || 'Failed to add to cart', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error adding to cart', 'error');
+        console.error('Error:', error);
+    });
+});
+</script>
+{% endblock %}
