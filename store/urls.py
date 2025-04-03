@@ -26,13 +26,11 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('profile/', views.profile_view, name='profile'),  # Add this line
-    path('profile/orders/', views.orders_view, name='orders'),  # Add this line
-    path('profile/settings/', views.settings_view, name='settings'),  # Add this line
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-codes/', views.resend_verification_codes, name='resend_codes'),
     path('send-otp/', views.send_otp, name='send_otp'),
     path('api/stock/check/', views.check_stock, name='check_stock'),
+    path('about/', views.about, name='about'),
 ]
 
 if settings.DEBUG:

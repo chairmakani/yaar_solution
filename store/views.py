@@ -9,11 +9,11 @@ import logging
 logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator
 import json
-from .models import Product, Category, Location, NGO, Cart, CartItem, UnitType, ProductVariant, OTP, Order  # Add UnitType, ProductVariant, OTP and Order import
+from .models import Product, Category, Location, NGO, Cart, CartItem, UnitType, ProductVariant  # Add UnitType and ProductVariant import
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction, DatabaseError
@@ -573,104 +573,46 @@ def create_order(request):
 @ensure_csrf_cookie
 @csrf_protect
 def login_view(request):
-    """Enhanced login view with better error handling"""
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.filter(email=email).first()
             
-            if not user.is_active:
+            if not user:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Please verify your email first'
+                    'message': 'User not found'
                 })
 
-            if user.check_password(password):
-                if not user.profile.email_verified:
-                    # Send new OTP and require verification
-                    if send_otp_email(email):
-                        request.session['login_user_id'] = user.id
-                        return JsonResponse({
-                            'status': 'verify_otp',
-                            'message': 'Please verify your email'
-                        })
-                    else:
-                        raise ValidationError('Failed to send verification code')
-
-                login(request, user)
-                return JsonResponse({
-                    'status': 'success',
-                    'redirect_url': reverse('store:home'),
-                    'message': f'Welcome back, {user.first_name}!'
-                })
-            else:
+            if not user.check_password(password):
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Invalid password'
                 })
-                
-        except User.DoesNotExist:
+
+            if not user.profile.is_verified:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Please verify your account first'
+                })
+            
+            login(request, user)
+            
             return JsonResponse({
-                'status': 'error',
-                'message': 'No account found with this email'
+                'status': 'success',
+                'redirect_url': reverse('store:home'),
+                'message': f'Welcome back, {user.first_name}!'
             })
-        except ValidationError as e:
+
+        except Exception as e:
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
             })
-        except Exception as e:
-            logger.error(f"Login error: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'An error occurred during login'
-            })
 
     return render(request, 'store/login.html')
-
-# 🔹 Logout View
-def logout_view(request):
-    logout(request)
-    messages.success(request, 'Logged out successfully.')
-    return redirect('store:login')
-
-# 🔹 Profile View (Optional - For Account Details)
-def profile_view(request):
-    if not request.user.is_authenticated:
-        return redirect('store:login')
-
-    return render(request, 'store/profile.html', {'user': request.user})
-
-@login_required
-def orders_view(request):
-    """Display user's orders"""
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'store/profile/orders.html', {'orders': orders})
-
-@login_required
-def settings_view(request):
-    """Handle user settings"""
-    if request.method == 'POST':
-        # Handle settings update
-        try:
-            user = request.user
-            user.first_name = request.POST.get('first_name', user.first_name)
-            user.last_name = request.POST.get('last_name', user.last_name)
-            user.email = request.POST.get('email', user.email)
-            user.profile.phone_number = request.POST.get('phone', user.profile.phone_number)
-            
-            user.save()
-            user.profile.save()
-            
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('store:settings')
-            
-        except Exception as e:
-            messages.error(request, f'Error updating profile: {str(e)}')
-    
-    return render(request, 'store/profile/settings.html', {'user': request.user})
 
 @ensure_csrf_cookie
 @csrf_protect
@@ -701,27 +643,27 @@ def verify_account(request):
 def register_view(request):
     if request.method == 'POST':
         try:
+            # Get form data
+            phone = request.POST.get('phone')
+            email = request.POST.get('email')
+            name = request.POST.get('name')
+            password = request.POST.get('password')
+            
+            # Check if user already exists
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Email already registered'
+                })
+
+            if User.objects.filter(profile__phone_number=phone).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Phone number already registered'
+                })
+
+            # Create user with is_active=False
             with transaction.atomic():
-                # Get form data
-                phone = request.POST.get('phone')
-                email = request.POST.get('email')
-                name = request.POST.get('name')
-                password = request.POST.get('password')
-                
-                # Check if user already exists
-                if User.objects.filter(email=email).exists():
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'Email already registered'
-                    })
-
-                if User.objects.filter(profile__phone_number=phone).exists():
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'Phone number already registered'
-                    })
-
-                # Create user with is_active=False
                 user = User.objects.create_user(
                     username=email,
                     email=email,
@@ -737,14 +679,19 @@ def register_view(request):
                 request.session['registration_user_id'] = user.id
                 
                 # Send OTP
-                if send_otp_email(email):
-                    return JsonResponse({
-                        'status': 'success',
-                        'redirect_url': reverse('store:verify_otp')
-                    })
-                else:
-                    # Rollback will happen automatically due to transaction.atomic()
-                    raise ValidationError('Failed to send OTP')
+                try:
+                    if send_otp_email(email):
+                        return JsonResponse({
+                            'status': 'success',
+                            'redirect_url': reverse('store:verify_otp')
+                        })
+                    else:
+                        # If OTP sending fails, rollback transaction
+                        raise ValidationError('Failed to send OTP')
+                except Exception as e:
+                    # Rollback by deleting the user
+                    user.delete()
+                    raise ValidationError(f'OTP sending failed: {str(e)}')
 
         except ValidationError as ve:
             logger.error(f"Validation error during registration: {str(ve)}")
@@ -752,6 +699,12 @@ def register_view(request):
                 'status': 'error',
                 'message': str(ve)
             }, status=400)
+        except DatabaseError as de:
+            logger.error(f"Database error during registration: {str(de)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Database error occurred'
+            }, status=500)
         except Exception as e:
             logger.error(f"Unexpected error during registration: {str(e)}")
             return JsonResponse({
@@ -763,41 +716,57 @@ def register_view(request):
 
 @ensure_csrf_cookie
 @csrf_protect
-def verify_otp_view(request):
-    """Handle OTP verification with improved flow"""
-    if not request.session.get('registration_user_id'):
+def verify_otp(request):
+    user_id = request.session.get('registration_user_id')
+    if not user_id:
         return redirect('store:register')
-
+    
     try:
-        user = User.objects.get(
-            id=request.session['registration_user_id'],
-            is_active=False
-        )
-
-        if request.method == 'POST':
-            otp_code = request.POST.get('otp')
-
-            if check_otp(user.email, otp_code):
-                with transaction.atomic():
-                    user.is_active = True
-                    user.save(update_fields=['is_active'])
-
-                    user.profile.email_verified = True
-                    user.profile.save(update_fields=['email_verified'])
-
-                    # Automatically redirect to login page
-                    messages.success(request, 'Account verified successfully! Please log in.')
-                    return redirect('store:login')
-
-            else:
-                messages.error(request, 'Invalid or expired OTP.')
-                return redirect('store:verify_otp')
-
-        return render(request, 'store/verify_otp.html', {'email': user.email})
-
+        user = User.objects.get(id=user_id, is_active=False)
     except User.DoesNotExist:
-        messages.error(request, 'User does not exist.')
         return redirect('store:register')
+        
+    if request.method == 'POST':
+        try:
+            otp = request.POST.get('otp')
+            email = user.email
+            
+            if verify_otp(email, otp):
+                # Activate user and set profile as verified
+                user.is_active = True
+                user.save()
+                user.profile.is_verified = True
+                user.profile.save()
+                
+                # Clear session
+                del request.session['registration_user_id']
+                
+                # Log the user in
+                login(request, user)
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect_url': reverse('store:home'),
+                    'message': 'Account verified successfully!'
+                })
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid OTP'
+                })
+        except Exception as e:
+            logger.error(f"OTP verification error: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An error occurred during verification'
+            })
+            
+    return render(request, 'store/verify_otp.html', {
+        'email': user.email
+    })
+
+# Remove success_page view as we're redirecting directly to verify_otp
+
 @require_POST
 def resend_verification_codes(request):
     """Handle resending of verification codes with rate limiting"""
@@ -845,68 +814,40 @@ def resend_verification_codes(request):
         }, status=500)
 
 def send_otp(request):
-    """Handle sending OTP"""
-    try:
+    if request.method == 'POST':
         email = request.POST.get('email')
-        if not email:
+        if send_otp_email(email):
             return JsonResponse({
-                'status': 'error',
-                'message': 'Email is required'
-            })
-
-        # Generate OTP
-        otp_code = get_random_string(length=6, allowed_chars='0123456789')
-        expiry = timezone.now() + timezone.timedelta(minutes=10)
-
-        # Delete any existing unverified OTPs for this email
-        OTP.objects.filter(
-            email=email,
-            is_verified=False
-        ).delete()
-
-        # Create new OTP record
-        otp_record = OTP.objects.create(
-            email=email,
-            otp=otp_code,
-            expires_at=expiry
-        )
-
-        # Send OTP email
-        if send_otp_email(email, otp_code):
-            response = JsonResponse({
                 'status': 'success',
                 'message': 'OTP sent successfully'
             })
-            
-            # Store OTP in session instead of cookies for security
-            request.session['otp_data'] = {
-                'email': email,
-                'expires_at': expiry.isoformat()
-            }
-            return response
-
         return JsonResponse({
             'status': 'error',
             'message': 'Failed to send OTP'
         })
-    except Exception as e:
-        logger.error(f"Error in send_otp: {str(e)}")
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
+
+def verify_otp_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        otp_code = request.POST.get('otp')
+        
+        if verify_otp(email, otp_code):
+            return JsonResponse({
+                'status': 'success',
+                'message': 'OTP verified successfully'
+            })
         return JsonResponse({
             'status': 'error',
-            'message': 'Failed to send OTP'
+            'message': 'Invalid OTP'
         })
-
-def check_otp(email, otp_code):
-    """New function to verify OTP correctly"""
-    try:
-        otp_entry = OTP.objects.get(email=email, otp=otp_code, is_verified=False)
-        if otp_entry.expires_at < timezone.now():
-            return False
-        otp_entry.is_verified = True  # Mark OTP as used
-        otp_entry.save(update_fields=['is_verified'])
-        return True
-    except OTP.DoesNotExist:
-        return False
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
 
 def send_verification_codes(user):
     """Send verification codes via both email and SMS"""
@@ -979,14 +920,6 @@ class ProductDetailView(DetailView):
 def check_stock(request):
     """API endpoint to check stock levels for products"""
     try:
-        # Ensure request has CSRF token
-        csrf_token = request.headers.get('X-CSRFToken') or request.COOKIES.get('csrftoken')
-        if not csrf_token:
-            return JsonResponse({
-                'success': False,
-                'message': 'CSRF token missing'
-            }, status=403)
-
         data = json.loads(request.body)
         product_ids = data.get('product_ids', [])
 
@@ -995,7 +928,7 @@ def check_stock(request):
             product = get_object_or_404(Product, id=product_id)
             
             # Handle variants
-            if (product.has_variants):
+            if product.has_variants:
                 variants = product.variants.filter(is_active=True)
                 for variant in variants:
                     stock_data.append({
@@ -1015,8 +948,18 @@ def check_stock(request):
             'success': True,
             'stock_data': stock_data
         })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Product.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Product not found'
+        }, status=404)
     except Exception as e:
-        logger.error(f"Stock check error: {str(e)}")
         return JsonResponse({
             'success': False,
             'message': str(e)
@@ -1029,3 +972,6 @@ def get_stock_status(stock, threshold):
     elif stock <= threshold:
         return 'low_stock'
     return 'in_stock'
+
+def about(request):
+    return render(request, 'store/about.html')

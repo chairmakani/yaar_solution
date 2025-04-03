@@ -23,15 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-vi6d0wuowjt4n&-dm*!f!x9s%0sytqjv(kghf!fp%lelgy028q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
-CSRF_TRUSTED_ORIGINS = ['https://yaarsolution.com']
+ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,8 +41,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'store.middleware.NoCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -143,13 +138,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Change to SMTP backend
-EMAIL_HOST = 'smtp.gmail.com'
+# Email Configuration for Development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
+EMAIL_HOST = 'smtp.gmail.com'  # Update this for your email provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'diam59969@gmail.com'
-EMAIL_HOST_PASSWORD = 'xbjjdzjfbmnnpdrz'
+EMAIL_HOST_USER = 'diam59969@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'xbjjdzjfbmnnpdrz'  # Replace with your app password
 DEFAULT_FROM_EMAIL = 'Hey this is yaarsolution <diam59969@gmail.com>'
 
 # Rate Limiting Settings

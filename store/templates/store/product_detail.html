@@ -51,12 +51,6 @@
 
     <div class="product-info">
         <h1 class="product-title">{{ product.name }}</h1>
-        
-        <!-- Add product type indicator -->
-        <div class="product-type {{ product.has_variants|yesno:'variant,standard' }}">
-            {{ product.has_variants|yesno:'Multiple Options,Standard Item' }}
-        </div>
-        
         <div class="price-section">
             <span class="current-price" id="display-price">₹{{ product.price }}</span>
             {% if product.original_price %}
@@ -72,43 +66,45 @@
         </div>
         {% endif %}
 
-        <!-- Update variant selector -->
-        {% if product.has_variants %}
         <div class="variant-selector">
-            <div class="variant-summary">
-                <span>Select your preferred option:</span>
-            </div>
-            <div class="variant-options">
-                {% for variant in product.variants.all %}
-                <div class="variant-choice">
-                    <input type="radio" 
-                           name="variant" 
-                           id="variant-{{ variant.id }}"
-                           value="{{ variant.id }}"
-                           data-price="{{ variant.price }}"
-                           data-stock="{{ variant.stock }}"
-                           {% if not variant.stock %}disabled{% endif %}
-                           required>
-                    <label class="variant-label" for="variant-{{ variant.id }}">
-                        <div class="variant-info">
-                            <span class="variant-name">{{ variant.name }}</span>
-                            <span class="variant-price">₹{{ variant.price }}</span>
+            {% if product.has_variants %}
+                <div class="variant-options">
+                    <input type="hidden" id="selected-variant-id" name="variant_id">
+                    {% with variants=product.get_organized_variants %}
+                        {% for value, data in variants.items %}
+                        <div class="variant-group">
+                            <h4>{{ data.display }}</h4>
+                            <div class="variant-choices">
+                                {% for variant in data.variants %}
+                                <div class="variant-choice {% if not variant.stock %}out-of-stock{% endif %}">
+                                    <input type="radio" 
+                                           name="variant" 
+                                           id="variant-{{ variant.id }}"
+                                           value="{{ variant.id }}"
+                                           data-price="{{ variant.price }}"
+                                           data-stock="{{ variant.stock }}"
+                                           {% if not variant.stock %}disabled{% endif %}
+                                           onchange="updateSelectedVariant({{ variant.id }}, {{ variant.price }}, {{ variant.stock }})"
+                                           required>
+                                    <label for="variant-{{ variant.id }}">
+                                        <span class="variant-price">₹{{ variant.price }}</span>
+                                        <span class="stock-status">
+                                            {% if variant.stock > 0 %}
+                                                {{ variant.stock }} available
+                                            {% else %}
+                                                Out of stock
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <span class="stock-status {% if variant.stock > 5 %}in-stock{% elif variant.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
-                            {% if variant.stock > 5 %}
-                                In Stock
-                            {% elif variant.stock > 0 %}
-                                Only {{ variant.stock }} left
-                            {% else %}
-                                Out of Stock
-                            {% endif %}
-                        </span>
-                    </label>
+                        {% endfor %}
+                    {% endwith %}
                 </div>
-                {% endfor %}
-            </div>
+            {% endif %}
         </div>
-        {% endif %}
 
         <div class="description">
             {{ product.description|linebreaks }}
@@ -129,7 +125,6 @@
             </div>
         </div>
 
-        <!-- Update add to cart button -->
         <div class="product-actions">
             <div class="actions-container">
                 <div class="quantity-selector" data-product-id="{{ product.id }}">
@@ -150,16 +145,11 @@
                     <button class="qty-btn increase" type="button" {% if not product.has_variants %}disabled{% endif %}>+</button>
                 </div>
                 
-                <button class="add-to-cart-btn {% if product.has_variants %}select-options{% endif %}"
+                <button class="add-to-cart-btn btn" 
+                        {% if product.has_variants %}data-requires-variant="true"{% endif %}
                         data-product-id="{{ product.id }}"
-                        data-requires-variant="{{ product.has_variants|lower }}"
-                        {% if not product.has_variants and not product.stock %}disabled{% endif %}>
-                    <i class="fas fa-{% if product.has_variants %}list{% else %}cart-plus{% endif %}"></i>
-                    {% if product.has_variants %}
-                        Select Options
-                    {% else %}
-                        {% if product.stock > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
-                    {% endif %}
+                        data-product-name="{{ product.name }}">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
                 </button>
             </div>
         </div>

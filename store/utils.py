@@ -3,7 +3,6 @@ import string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from django.utils.crypto import get_random_string  # Add this import
 from datetime import timedelta
 from .models import OTP
 from django.db import transaction
@@ -20,79 +19,59 @@ def filter_products(products, query):
 def generate_otp(length=6):
     return ''.join(random.choices(string.digits, k=length))
 
-def send_otp_email(email, otp_code=None):
-    """Send OTP email to user"""
+def send_otp_email(email):
     try:
+        # Delete any existing unused OTP with a lock to prevent race conditions
         with transaction.atomic():
-            # Delete any existing unverified OTPs
-            OTP.objects.filter(
-                email=email,
-                is_verified=False
-            ).delete()
+            OTP.objects.filter(email=email, is_verified=False).delete()
             
-            # Generate new OTP if not provided
-            if not otp_code:
-                otp_code = get_random_string(length=6, allowed_chars='0123456789')
+            # Generate new OTP
+            otp_code = generate_otp()
+            expires_at = timezone.now() + timedelta(minutes=10)
             
-            # Create OTP record with expiry
+            # Save OTP in database
             OTP.objects.create(
                 email=email,
                 otp=otp_code,
-                expires_at=timezone.now() + timezone.timedelta(minutes=10),
-                attempts=0,
-                is_active=True
+                expires_at=expires_at
             )
-
-            # Send email
-            subject = 'Your Verification Code'
-            message = f'Your verification code is: {otp_code}'
-            from_email = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [email]
-            
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=from_email,
-                recipient_list=recipient_list,
-                fail_silently=False
-            )
-            
-            return True
-            
+        
+        # Send email with multiple retries
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                send_mail(
+                    subject='Your OTP for verification',
+                    message=f'Your OTP is {otp_code}. This OTP will expire in 10 minutes.',
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                return True
+            except SMTPException as e:
+                if attempt == max_retries - 1:  # Last attempt
+                    logger.error(f"Failed to send OTP email after {max_retries} attempts: {str(e)}")
+                    raise
+                time.sleep(1)  # Wait before retrying
+                
     except Exception as e:
         logger.error(f"Error in send_otp_email: {str(e)}")
+        # Clean up OTP if email fails
+        OTP.objects.filter(email=email, is_verified=False).delete()
         return False
 
 def verify_otp(email, otp_code):
-    """Verify OTP code against database record"""
     try:
-        # Get the most recent valid OTP record
-        otp_record = OTP.objects.filter(
+        otp_obj = OTP.objects.get(
             email=email,
             otp=otp_code,
-            is_verified=False,
-            is_active=True,
-            expires_at__gt=timezone.now()
-        ).select_for_update().first()
-
-        if not otp_record:
-            logger.warning(f"No valid OTP found for email {email}")
-            return False
-
-        with transaction.atomic():
-            # Mark OTP as verified
-            otp_record.is_verified = True
-            otp_record.save(update_fields=['is_verified'])
-
-            # Cleanup old OTPs for this email
-            OTP.objects.filter(
-                email=email,
-                is_verified=False,
-                expires_at__lte=timezone.now()
-            ).delete()
-
-        return True
-
-    except Exception as e:
-        logger.error(f"Error in verify_otp: {str(e)}")
+            is_verified=False
+        )
+        
+        if otp_obj.is_valid():
+            otp_obj.is_verified = True
+            otp_obj.save()
+            return True
+        return False
+    except OTP.DoesNotExist:
         return False

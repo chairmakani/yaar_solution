@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+            color: aliceblue;
+            background: linear-gradient(to right,rgb(14, 14, 14),rgb(4, 185, 139));
+        }
+        .main {
+            text-align: center;
+        }
+        .services-box1, .services-box2, .services-box3 {
+            display: inline-block;
+            width: 550px;
+            height: 200px;
+            background: rgb(13, 169, 143);
+            padding: 20px;
+            border: 5px solid white;
+            margin-left: 20px;
+        }
+        .heading {
+            text-align: center;
+        }
+        .testimonial-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 240px;
+        }
+        .testimonial-card {
+            background: white;
+            width: 250px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .profile-img img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 5px solid white;
+        }
+        .testimonial-content {
+            background: rgb(13, 169, 143);
+            color: white;
+            padding: 20px;
+        }
+        .quote {
+            font-size: 30px;
+            margin: 0;
+        }
+        .testimonial-text {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        .name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .news-container {
+            width: 80%;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 3px solid blue;
+            padding-bottom: 5px;
+        }
+        .headline {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .news-content {
+            display: flex;
+            margin-top: 10px;
+        }
+        .news-image {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+            margin-left: 10px;
+        }
+        .news-text {
+            flex-grow: 1;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-left: 170px;
+        }
+        .category {
+            width: 30%;
+        }
+        .category h2 {
+            border-bottom: 3px solid red;
+            padding-bottom: 5px;
+        }
+        .news-item {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .news-item img {
+            width: 60px;
+            height: 60px;
+            margin-right: 10px;
+            background: #ccc;
+        }
+        .news-item p {
+            margin: 0;
+        }
+        .highlight-box {
+            border: 3px dashed #007BFF; /* Changed border style to dashed */
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            background: linear-gradient(to right,rgb(4, 185, 139),rgb(19, 19, 19));
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    {% load static %}
+    <h1 class="main">About Us</h1><br>
+    <h2 class="heading">YAAR Solutions –தென்காசி மாவட்ட பெண்களின் சுய உதவி குழுக்கள்  மற்றும்  சிறு குறு தொழில் நிறுவனங்கள் வளர்ச்சி எங்கள் இலக்கு!</h2><br>
+
+    <div class="news-container">
+        <div class="title"> பெண்களின் வெற்றிக்கு உறுதியான துணை! </div>
+        <div class="news-content">
+            <div class="news-text">
+                <div class="headline"> தொழில் முனைவோருக்கான மேம்பாடு | சந்தைப்படுத்தல் | பயிற்சி | வணிகம் | ஏற்றுமதி </div>
+            </div>
+            <img src="{% static 'images/group icon.jpeg' %}" alt="Plastic Waste" class="news-image">
+        </div>
+        <p>
+            ✅ முதலீடுகளுக்கு சிறந்த வாய்ப்புகள்!<br>
+            ✅ ஏற்றுமதிக்கேற்ப தரமான இயற்கை உணவுப் பொருட்கள்!<br>
+            ✅ சிறுபான்மையின தொழில் முனைவோருக்கான முழுமையான பயிற்சிகள்!<br>
+            ✅ உலகளாவிய சந்தையில் தொழில்முனைவோர்களின் சாதனையை வெளிக்கொணர்தல் <br><br></p>
+    </div><br>
+
+    <div class="news-container">
+        <div class="title"> இயற்கை உணவுப் பொருட்களை உலகளாவிய சந்தைக்கு கொண்டு செல்வோம்! </div>
+        <div class="news-content">
+            <div class="news-text">
+                <div class="headline">   நாங்கள் வழங்கும் சேவைகள்: </div>
+            </div>
+            <img src="{% static 'images/group icon.jpeg' %}" alt="Plastic Waste" class="news-image">
+        </div>
+        <p>
+            🔸 தொழில் முனைவோர் மேம்பாட்டு பயிற்சி<br>
+            🔸 சிறப்பு சந்தைப்படுத்தல் உத்திகள்<br>
+            🔸 ஏற்றுமதி வணிக வாய்ப்புகள்<br>
+            🔸 இயற்கை உணவுப் பொருட்கள் வர்த்தகம்<br>
+            🔸 MSME மற்றும் சிறிய தொழில்களுக்கு முழுமையான ஆதரவு<br></p>
+    </div><br><br>
+
+    <div class="testimonial-container">
+        <div class="testimonial-card">
+            <div class="profile-img">
+                <img src="{% static 'images/group icon.jpeg' %}" alt="Profile Picture">
+            </div>
+            <div class="testimonial-content">
+                <p class="quote">“</p>
+                <p class="testimonial-text">
+                +91 ##########</p>
+                <p class="quote">”</p>
+                <h3 class="name">CONTACT US</h3>
+            </div>
+        </div>
+        <div class="testimonial-card">
+            <div class="profile-img">
+                <img src="{% static 'images/group icon.jpeg' %}" alt="Profile Picture">
+            </div>
+            <div class="testimonial-content">
+                <p class="quote">“</p>
+                <p class="testimonial-text">
+                yaar_solution@gmail.com</p>
+                <p class="quote">”</p>
+                <h3 class="name">EMAIL ID</h3>
+            </div>
+        </div>
+        <div class="testimonial-card">
+            <div class="profile-img">
+                <img src="{% static 'images/group icon.jpeg' %}" alt="Profile Picture">
+            </div>
+            <div class="testimonial-content">
+                <p class="quote">“</p>
+                <p class="testimonial-text">
+                WWW.Yaar_Solution.com</p>
+                <p class="quote">”</p>
+                <h3 class="name">WEBSITE LINK</h3>
+            </div>
+        </div>
+    </div><br><br>
+
+    <div class="highlight-box">
+        <p>YARR SOLUTIONS – உங்களுடன், உங்களுக்காக</p>
+        <p>உங்கள் எதிர்காலத்திற்கான ஒளிக்கதிர்!</p>
+        <p>எதிர்காலத்தை உருவாக்கும் எண்ணங்கள்!</p>
+        <p>சாதனை செய்வதற்கான சக்தி!</p>
+        <p>கடின உழைப்பின் கனவு!</p>
+        <p>சிறிய உதவியால் பெரிய மாற்றம்!</p>
+        <p>மிகுந்த அறிவால் ஒளியூட்டல்!</p>
+        <p>வளர்ச்சிக்கான வழிகாட்டல்!</p>
+    </div><br>
+
+    <div class="container">
+        <div class="category">
+            <div class="news-item">
+                <img src="placeholder.jpg" alt="Webdunia">
+                <p>மகளிர் முன்னேற்றம் – ஊரக பெண்களுக்கு நம்பிக்கையின் ஒளி!</p>
+            </div>
+        </div>
+        
+        <div class="category">
+            <div class="news-item">
+                <img src="placeholder.jpg" alt="Webdunia">
+                <p> தொழில் முனைவு பயிற்சி – கனவுகளை வாழ்வாக்கும் கலை!</p>
+            </div>
+        </div>
+    
+        <div class="category">
+            <div class="news-item">
+                <img src="placeholder.jpg" alt="Webdunia">
+                <p>MSME யுடன் இணைந்து – சிறிய முயற்சியில் பெரிய வெற்றி!</p>
+            </div>
+        </div>
+    </div><br>
+<div class="news-container">
+    <div class="title">YAAR SOLUTIONS – உங்கள் வெற்றி எங்கள் லட்சியம்!</div>
+    <div class="news-content">
+        <div class="news-text">
+            <div class="headline">உயிருக்கு உலை வைக்கும் பாட்டில் குடிநீர்; எச்சரிக்கும் தர நிர்ணய அமைப்ப</div>
+        </div>
+        <img src="{% static 'images/group icon.jpeg' %}" alt="Plastic Waste" class="news-image">
+    </div>
+    <p>நாங்கள் யார்?<br>
+        நம்பிக்கையின் விளக்கை ஏற்றும் வழிகாட்டிகள்!<br>
+        உங்களின் வளர்ச்சிக்கான துணைபுரிவோர்!<br>
+        அடுத்த தலைமுறைக்காக ஒளியூட்டும் தீபங்கள்!</p>
+ 
+</div><br><br><br>
+
+
+
+</body>
+</html>

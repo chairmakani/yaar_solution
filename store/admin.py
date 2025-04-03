@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils.html import format_html
 from .models import (
     Product, Category, NGO, Location, ProductVariant, 
-    VariantType, ProductImage, UnitType , Order , OrderItem ,
+    VariantType, ProductImage, UnitType
 )
 
 class ProductVariantInline(admin.TabularInline):
@@ -134,16 +134,5 @@ class ProductImageAdmin(admin.ModelAdmin):
     list_filter = ['is_primary', 'created_at']
     search_fields = ['product__name', 'alt_text']
     ordering = ['product', 'order', 'created_at']
-
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'user', 'total', 'status', 'payment_status', 'created_at']
-    list_filter = ['status', 'payment_status', 'created_at']
-    search_fields = ['order_number', 'user__email', 'phone']
-
-@admin.register(OrderItem)
-class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ['order', 'product', 'quantity', 'price', 'total']
-    search_fields = ['order__order_number', 'product__name']
 
 

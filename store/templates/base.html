@@ -28,7 +28,7 @@
         {% block content %}
         <nav class="navbar">
             <a href="{% url 'store:home' %}" class="logo">
-                <span class="logo-main">YAAR SOLUTION</span>
+                <span class="logo-main">YAAR</span>
                 <span class="logo-subtext">Empowering Communities</span>
             </a>
             <div class="nav-icons">
@@ -45,37 +45,8 @@
             </div>
             <div class="contact-number"><i class="fas fa-phone-alt"></i> +91 0000000000</div>
             <div class="account-links">
-                {% if user.is_authenticated %}
-                    <div class="profile-dropdown">
-                        <div class="profile-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="dropdown-menu">
-                            <div class="user-info">
-                                <div class="user-name">{{ user.get_full_name }}</div>
-                                <div class="user-email">{{ user.email }}</div>
-                            </div>
-                            <a href="{% url 'store:profile' %}" class="dropdown-item">
-                                <i class="fas fa-user-circle"></i> My Profile
-                            </a>
-                            <a href="{% url 'store:orders' %}" class="dropdown-item">
-                                <i class="fas fa-shopping-bag"></i> My Orders
-                            </a>
-                            <a href="{% url 'store:settings' %}" class="dropdown-item">
-                                <i class="fas fa-cog"></i> Settings
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="{% url 'store:logout' %}" class="dropdown-item text-danger">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="auth-buttons">
-                        <a href="{% url 'store:login' %}" class="btn-login">Login</a>
-                        <a href="{% url 'store:register' %}" class="btn-register">Register</a>
-                    </div>
-                {% endif %}
+                <i class="fas fa-user-circle"></i>
+                <a href="{% url 'store:login' %}">Login</a> / <a href="{% url 'store:register' %}">Register</a>
             </div>
             <div class="cart-details">
                 <a href="{% url 'store:cart' %}" class="cart-link">
@@ -140,7 +111,7 @@
                         </ul>
                     </li>
                 </ul>
-                <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
+                <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
                 <li><a href="#"><i class="fas fa-phone"></i> Contact Us</a></li>
             </ul>
         </nav>

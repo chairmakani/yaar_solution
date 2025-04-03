@@ -1,317 +1,218 @@
-{# filepath: e:\work env\ecommerce\store\templates\store\login.html #}
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{% static 'css/login-style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Login Container -->
+    <div class="login-container">
+        <!-- Cancel Button -->
+        <button class="cancel-btn" onclick="location.href='{% url 'store:home' %}'">&times;</button>
 
-{% block title %}Login - YAAR SOLUTION{% endblock %}
+        <!-- Title -->
+        <h1 class="login-title">Login</h1>
 
-{% block extra_css %}
-<style>
-.auth-container {
-    max-width: 400px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" id="phone-tab" data-tab="phone">Use Phone Number</button>
+            <button class="tab-button" id="email-tab" data-tab="email">Use Email Address</button>
+        </div>
 
-.auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
+        <!-- Tab Contents -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="tab-content active" id="phone-content">
+            <form method="POST" action="{% url 'store:login' %}" id="phone-form">
+                {% csrf_token %}
+                <input type="hidden" name="login_type" value="phone">
+                <div class="phone-input">
+                    <span class="country-code">
+                        <i class="fas fa-flag-india"></i>
+                        +91
+                    </span>
+                    <input type="text" id="phone-number" name="phone" placeholder="81234 56789" required>
+                </div>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit" class="continue-btn" id="phone-continue-btn">Continue &rarr;</button>
+            </form>
+        </div>
 
-.auth-header h2 {
-    color: #1a237e;
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-}
+        <div class="tab-content" id="email-content">
+            <form method="POST" action="{% url 'store:login' %}" id="email-form">
+                {% csrf_token %}
+                <input type="hidden" name="login_type" value="email">
+                <label for="email-address">Email Address:</label>
+                <input type="email" id="email-address" name="email" placeholder="Enter your email address">
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit" class="continue-btn" id="email-continue-btn">Continue &rarr;</button>
+            </form>
+        </div>
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
+        <!-- Register Link -->
+        <div class="register-link">
+            <p>Not a member yet? <a href="{% url 'store:register' %}">Register Now</a></p>
+        </div>
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #333;
-    font-weight: 500;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: #1a237e;
-    box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
-    outline: none;
-}
-
-.auth-btn {
-    width: 100%;
-    padding: 1rem;
-    background: #1a237e;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.auth-btn:hover {
-    background: #283593;
-    transform: translateY(-1px);
-}
-
-.auth-links {
-    text-align: center;
-    margin-top: 1.5rem;
-}
-
-.auth-links a {
-    color: #1a237e;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.auth-links a:hover {
-    text-decoration: underline;
-}
-
-.message {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.message.success {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
-}
-
-.message.error {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-}
-
-.otp-container {
-    display: none;
-}
-
-.otp-container.show {
-    display: block;
-}
-
-.otp-inputs {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin: 1.5rem 0;
-}
-
-.otp-input {
-    width: 40px;
-    height: 40px;
-    text-align: center;
-    font-size: 1.2rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-}
-
-.otp-input:focus {
-    border-color: #1a237e;
-    box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
-}
-
-.profile-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.profile-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #1a237e;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 200px;
-    display: none;
-}
-
-.profile-dropdown:hover .dropdown-menu {
-    display: block;
-}
-
-.dropdown-item {
-    padding: 0.8rem 1rem;
-    color: #333;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.dropdown-item:hover {
-    background: #f5f5f5;
-}
-
-.user-info {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.user-name {
-    font-weight: 600;
-    color: #1a237e;
-}
-
-.user-email {
-    font-size: 0.9rem;
-    color: #666;
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="auth-container">
-    <div class="auth-header">
-        <h2>Welcome Back</h2>
-        <p>Please login to continue</p>
+        {% if user.is_authenticated %}
+        <div class="user-menu">
+            <span>Welcome, {{ user.first_name|default:user.username }}</span>
+            <a href="{% url 'store:logout' %}" class="logout-btn">Logout</a>
+        </div>
+        {% endif %}
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="message {{ message.tags }}">
-                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const phoneTab = document.getElementById("phone-tab");
+            const emailTab = document.getElementById("email-tab");
+            const phoneContent = document.getElementById("phone-content");
+            const emailContent = document.getElementById("email-content");
 
-    <form method="post" id="login-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="form-control" required>
-        </div>
-        <button type="submit" class="auth-btn">
-            <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-    </form>
+            const phoneInput = document.getElementById("phone-number");
+            const emailInput = document.getElementById("email-address");
 
-    <div class="auth-links">
-        <p>Don't have an account? <a href="{% url 'store:register' %}">Register</a></p>
-    </div>
-</div>
+            const phoneContinueBtn = document.getElementById("phone-continue-btn");
+            const emailContinueBtn = document.getElementById("email-continue-btn");
 
-<div id="otp-modal" class="modal">
-    <div class="modal-content">
-        <h3>Enter Verification Code</h3>
-        <p>Please enter the code sent to your email</p>
-        <div class="otp-inputs">
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-            <input type="text" maxlength="1" class="otp-input" pattern="\d" required>
-        </div>
-        <button type="button" class="auth-btn" id="verify-otp">Verify Code</button>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('login-form');
-    const otpModal = document.getElementById('otp-modal');
-    const otpInputs = document.querySelectorAll('.otp-input');
-    
-    // Handle OTP input
-    otpInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (e.target.value) {
-                if (index < otpInputs.length - 1) {
-                    otpInputs[index + 1].focus();
-                }
+            // Function to switch tabs
+            function switchTab(activeTab, inactiveTab, activeContent, inactiveContent) {
+                activeTab.classList.add("active");
+                inactiveTab.classList.remove("active");
+                activeContent.classList.add("active");
+                inactiveContent.classList.remove("active");
             }
-        });
 
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                otpInputs[index - 1].focus();
-            }
-        });
-    });
-
-    // Handle form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        try {
-            const response = await fetch("{% url 'store:login' %}", {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
+            phoneTab.addEventListener("click", () => {
+                switchTab(phoneTab, emailTab, phoneContent, emailContent);
             });
 
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                window.location.href = data.redirect_url;
-            } else if (data.status === 'verify_otp') {
-                otpModal.classList.add('show');
-            } else {
-                showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            showNotification('An error occurred', 'error');
-        }
-    });
-});
+            emailTab.addEventListener("click", () => {
+                switchTab(emailTab, phoneTab, emailContent, phoneContent);
+            });
 
-function showNotification(message, type) {
-    const container = document.createElement('div');
-    container.className = `message ${type}`;
-    container.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        ${message}
-    `;
-    
-    document.querySelector('.auth-header').insertAdjacentElement('afterend', container);
-    
-    setTimeout(() => container.remove(), 5000);
-}
-</script>
-{% endblock %}
+            // Validate and submit for phone login
+            const phoneForm = document.getElementById("phone-form");
+            phoneForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const phoneRegex = /^[0-9]{10}$/;
+                if (!phoneRegex.test(phoneInput.value.trim())) {
+                    alert("Please enter a valid 10-digit phone number.");
+                    return;
+                }
+                this.submit();
+            });
+
+            // Validate and submit for email login
+            const emailForm = document.getElementById("email-form");
+            emailForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailInput.value.trim())) {
+                    alert("Please enter a valid email address.");
+                    return;
+                }
+                this.submit();
+            });
+        });
+
+        // Message handling function
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.querySelector('.messages');
+            messagesDiv.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                    <button class="alert-close">&times;</button>
+                </div>
+            `;
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = messagesDiv.querySelector('.alert');
+                if (alert) {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 300);
+                }
+            }, 5000);
+            
+            // Close button functionality
+            const closeBtn = messagesDiv.querySelector('.alert-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const alert = e.target.closest('.alert');
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }
+        }
+
+        // Form submission handling
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                try {
+                    const formData = new FormData(e.target);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showMessage('Login successful! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    } else {
+                        showMessage(data.message, 'error');
+                    }
+                } catch (error) {
+                    showMessage('An error occurred. Please try again.', 'error');
+                }
+            });
+        });
+
+        // Check for stored credentials from OTP verification
+        const storedCredentials = sessionStorage.getItem('loginCredentials');
+        if (storedCredentials) {
+            const credentials = JSON.parse(storedCredentials);
+            // Clear stored credentials
+            sessionStorage.removeItem('loginCredentials');
+            
+            // Select appropriate form based on login type
+            const formId = credentials.type === 'phone' ? 'phone-form' : 'email-form';
+            const form = document.getElementById(formId);
+            
+            // Set form values
+            if (credentials.type === 'phone') {
+                document.getElementById('phone-number').value = credentials.identifier;
+            } else {
+                document.getElementById('email-address').value = credentials.identifier;
+            }
+            
+            form.querySelector('input[type="password"]').value = credentials.password;
+            
+            // Submit form automatically
+            setTimeout(() => form.submit(), 500);
+        }
+    </script>
+</body>
+</html>
