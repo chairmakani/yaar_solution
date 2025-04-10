@@ -678,3 +678,66 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('.products').classList.add('loading');
     });
 });
+
+// Enhanced sort handling
+document.addEventListener('DOMContentLoaded', function() {
+    const sortForm = document.getElementById('sort-form');
+    const sortSelect = document.getElementById('sort-options');
+    const productsContainer = document.querySelector('.products');
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', async function(e) {
+            e.preventDefault();
+            
+            // Add loading state
+            productsContainer.classList.add('sorting');
+            sortSelect.disabled = true;
+            
+            // Get current URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('sort', this.value);
+            
+            try {
+                // Fade out current products
+                productsContainer.style.opacity = '0';
+                productsContainer.style.transform = 'translateY(10px)';
+                
+                // Small delay for animation
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Submit form
+                window.location.search = urlParams.toString();
+                
+            } catch (error) {
+                console.error('Sort error:', error);
+                NotificationManager.show('Error applying sort', 'error');
+                
+                // Reset on error
+                productsContainer.classList.remove('sorting');
+                sortSelect.disabled = false;
+                productsContainer.style.opacity = '1';
+                productsContainer.style.transform = 'translateY(0)';
+            }
+        });
+        
+        // Add hover effect to select
+        sortSelect.addEventListener('mouseover', function() {
+            this.parentElement.classList.add('hover');
+        });
+        
+        sortSelect.addEventListener('mouseout', function() {
+            this.parentElement.classList.remove('hover');
+        });
+        
+        // Animate products on page load
+        window.addEventListener('load', function() {
+            const products = document.querySelectorAll('.product-card');
+            products.forEach((product, index) => {
+                setTimeout(() => {
+                    product.style.opacity = '1';
+                    product.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    }
+});

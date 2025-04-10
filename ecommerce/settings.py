@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-vi6d0wuowjt4n&-dm*!f!x9s%0sytqjv(kghf!fp%lelgy028q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -32,6 +32,7 @@ CSRF_TRUSTED_ORIGINS = ['https://yaarsolution.com']
 # Application definition
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
+    'storages',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'store.context_processors.global_data',
+                'store.context_processors.cart_context',  # Add this line
             ],
         },
     },
@@ -122,15 +124,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, 'store', 'static')
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files configuration
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'store', 'static', 'media')
+
 
 # Add messages framework
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
@@ -167,3 +170,7 @@ SMS_GATEWAY = {
     'API_KEY': 'your_api_key',
     'SENDER_ID': 'YOURAPP'
 }
+
+# Razorpay settings
+RAZORPAY_KEY_ID = "A772SHSH77" 
+RAZORPAY_KEY_SECRET = "YAAr@007"

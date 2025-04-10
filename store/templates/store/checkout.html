@@ -1,223 +1,111 @@
-{% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Checkout - YAAR SOLUTION{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+<link rel="stylesheet" href="{% static 'css/checkout2.css' %}">
 {% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
 <div class="checkout-container">
-    <div class="checkout-progress">
-        <div class="progress-step active" data-step="1">
-            <div class="step-number">1</div>
-            <span>Billing</span>
-        </div>
-        <div class="progress-step" data-step="2">
-            <div class="step-number">2</div>
-            <span>Shipping</span>
-        </div>
-        <div class="progress-step" data-step="3">
-            <div class="step-number">3</div>
-            <span>Payment</span>
-        </div>
+    <h1>Checkout</h1>
+    
+    {% if messages %} 
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
     </div>
+    {% endif %}
 
-    <div class="checkout-content">
-        <div class="checkout-form-wrapper">
-            <form id="checkout-form" method="POST">
-                {% csrf_token %}
-                <div class="checkout-step active" id="step-1">
-                    <div class="form-card">
-                        <h2>Billing Details</h2>
-                        <div class="form-section">
-                            <h3>Personal Information</h3>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="billing_first_name">First Name*</label>
-                                    <input type="text" id="billing_first_name" name="billing_first_name" 
-                                        required value="{{ user.first_name }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_last_name">Last Name*</label>
-                                    <input type="text" id="billing_last_name" name="billing_last_name" 
-                                        required value="{{ user.last_name }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_phone">Mobile Number*</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">+91</span>
-                                        <input type="tel" id="billing_phone" name="billing_phone" 
-                                            required pattern="[0-9]{10}" maxlength="10"
-                                            placeholder="10-digit mobile number">
-                                    </div>
-                                    <small class="text-muted">We'll send order updates on this number</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_email">Email Address</label>
-                                    <input type="email" id="billing_email" name="billing_email" 
-                                        value="{{ user.email }}"
-                                        placeholder="email@example.com">
-                                    <small class="text-muted">For order confirmation & updates</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <h3>Delivery Address</h3>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="billing_pincode">PINCODE*</label>
-                                    <input type="text" id="billing-pincode" name="billing_pincode" 
-                                        required pattern="[0-9]{6}" maxlength="6"
-                                        placeholder="Enter 6-digit pincode">
-                                    <small class="text-muted">Enter pincode for address suggestions</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_street">Street Address*</label>
-                                    <input type="text" id="billing_street" name="billing_street" 
-                                        required placeholder="House/Flat/Block No., Street address">
-                                    <input type="text" id="billing_street2" name="billing_street2" 
-                                        placeholder="Apartment, Building, Floor, Landmark (Optional)">
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_city">City/Town*</label>
-                                    <input type="text" id="billing_city" name="billing_city" 
-                                        required placeholder="Enter city name">
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_state">State*</label>
-                                    <select id="billing_state" name="billing_state" required>
-                                        <option value="" disabled>Select State</option>
-                                        <option value="Tamil Nadu" selected>Tamil Nadu</option>
-                                        <option value="Kerala">Kerala</option>
-                                        <option value="Karnataka">Karnataka</option>
-                                        <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_country">Country</label>
-                                    <input type="text" id="billing_country" name="billing_country" 
-                                        value="India" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label for="billing_address_type">Address Type</label>
-                                    <div class="address-type-selector">
-                                        <input type="radio" id="type_home" name="address_type" value="home" checked>
-                                        <label for="type_home" class="address-type">
-                                            <i class="fas fa-home"></i> Home
-                                        </label>
-                                        <input type="radio" id="type_work" name="address_type" value="work">
-                                        <label for="type_work" class="address-type">
-                                            <i class="fas fa-briefcase"></i> Work
-                                        </label>
-                                        <input type="radio" id="type_other" name="address_type" value="other">
-                                        <label for="type_other" class="address-type">
-                                            <i class="fas fa-map-marker-alt"></i> Other
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div class="checkout-grid">
+        <!-- Address Selection Section -->
+        <div class="checkout-section">
+            <h2><i class="fas fa-map-marker-alt"></i> Delivery Address</h2>
+            <div class="address-list">
+                {% if addresses %}
+                    <!-- Inside address selection section -->
+<form method="post" id="checkout-form" action="{% url 'store:checkout' %}">
+    {% csrf_token %}
+
+    {% for address in addresses %}
+    <div class="address-card">
+        <input type="radio" name="address_id" value="{{ address.id }}" 
+               id="address_{{ address.id }}" required 
+               {% if address.is_default %}checked{% endif %}>
+        <label for="address_{{ address.id }}">
+            <div class="address-type">{{ address.get_type_display }}</div>
+            <strong>{{ address.name }}</strong>
+            <p>{{ address.street }}</p>
+            <p>{{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+            <p>Phone: {{ address.phone }}</p>
+            {% if address.alternate_phone %}
+            <p>Alt Phone: {{ address.alternate_phone }}</p>
+            {% endif %}
+        </label>
+    </div>
+    {% endfor %}
+
+    <!-- Order Summary Section - moved inside the form -->
+    <div class="checkout-section">
+        <h2><i class="fas fa-shopping-cart"></i> Order Summary</h2>
+        <div class="order-items">
+            {% for item in cart_items %}
+            <div class="order-item">
+                <img src="{{ item.product.primary_image.url }}" alt="{{ item.product.name }}">
+                <div class="item-details">
+                    <h3>{{ item.product.name }}</h3>
+                    {% if item.variant %}
+                        <p class="variant-info">{{ item.variant_display }}</p>
+                    {% endif %}
+                    <div class="item-meta">
+                        <span class="quantity">Qty: {{ item.quantity }}</span>
+                        <span class="price">₹{{ item.total_price }}</span>
                     </div>
                 </div>
-                <div class="checkout-step" id="step-2">
-                    <div class="form-card">
-                        <h2>Shipping Address</h2>
-                        <div class="form-section">
-                            <input type="checkbox" id="shipping-same" checked>
-                            <label for="shipping-same">Ship to the same address?</label>
-                            <div id="shipping-fields" style="display: none;">
-                                <div class="form-grid">
-                                    <!-- Same structure as billing but with shipping_ prefix -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="checkout-step" id="step-3">
-                    <div class="form-card">
-                        <h2>Payment Method</h2>
-                        <div class="form-section">
-                            <div class="payment-methods">
-                                <div class="payment-method">
-                                    <input type="radio" name="payment" id="razorpay" value="razorpay">
-                                    <label for="razorpay">
-                                        <img src="{% static 'img/razorpay-logo.png' %}" alt="Razorpay">
-                                        <span>Pay with Razorpay</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="step-buttons">
-                    <button type="button" class="btn" id="prev-step" style="display: none;">Previous</button>
-                    <button type="button" class="btn" id="next-step">Next</button>
-                    <button type="button" class="btn" id="place-order" style="display: none;">Place Order</button>
-                </div>
-            </form>
+            </div>
+            {% endfor %}
         </div>
 
-        <div class="order-summary">
-            <h2>Order Summary</h2>
-            <div class="summary-items">
-                {% for item in cart_items %}
-                <div class="summary-item">
-                    <img src="{{ item.product.primary_image.image.url|default:'static/img/no-image.png' }}" 
-                         alt="{{ item.product.name }}">
-                    <div class="item-details">
-                        <h3>{{ item.product.name }}</h3>
-                        <p>Qty: {{ item.quantity }}</p>
-                        <p class="price">₹{{ item.total_price }}</p>
+        <div class="order-totals">
+            <div class="total-line">
+                <span>Items Total:</span>
+                <span>₹{{ items_total }}</span>
+            </div>
+            <div class="total-line">
+                <span>Shipping:</span>
+                <span>₹{{ shipping_fee }}</span>
+            </div>
+            <div class="total-line">
+                <span>Tax (18%):</span>
+                <span>₹{{ tax_amount }}</span>
+            </div>
+            <div class="total-line grand-total">
+                <span>Total:</span>
+                <span>₹{{ total_amount }}</span>
+            </div>
+        </div>
+
+        <!-- ✅ Now the button is inside the form -->
+        <button type="submit" class="btn btn-primary checkout-btn" {% if not addresses %}disabled{% endif %}>
+            Proceed to Payment
+        </button>
+    </div>
+</form>
+                {% else %}
+                    <div class="no-address">
+                        <p>No delivery addresses found</p>
+                        <a href="{% url 'store:profile' %}?address_required=true" 
+                           class="btn btn-primary">Add New Address</a>
                     </div>
-                </div>
-                {% endfor %}
+                {% endif %}
             </div>
-            <div class="summary-totals">
-                <div class="summary-row">
-                    <span>Subtotal</span>
-                    <span>₹{{ subtotal }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Shipping</span>
-                    <span>₹{{ shipping }}</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Total</span>
-                    <span>₹{{ total }}</span>
-                </div>
-            </div>
-            <button class="btn place-order" id="place-order-btn" onclick="validateAndSubmit()">Place Order</button>
         </div>
     </div>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="{% static 'js/checkout.js' %}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const razorpayOptions = {
-            key: "YOUR_RAZORPAY_KEY_ID",
-            amount: "{{ total|floatformat:2|floatformat:0 }}00",
-            currency: "INR",
-            name: "YAAR SOLUTION",
-            description: "Order Payment",
-            prefill: {
-                name: "{{ user.first_name }} {{ user.last_name }}",
-                email: "{{ user.email }}",
-                contact: "{{ user.profile.phone }}"
-            },
-            theme: {
-                color: "#3399cc"
-            }
-        };
-        
-        initializeCheckout(razorpayOptions);
-    });
-</script>
+<script src="{% static 'js/checkout2.js' %}"></script>
 {% endblock %}

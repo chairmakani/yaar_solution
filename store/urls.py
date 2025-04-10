@@ -17,10 +17,12 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart'),
     path('cart/update/', views.update_cart, name='cart_update'),  # Update name to cart_update
     path('cart/remove/', views.remove_from_cart, name='cart_remove'),  # Update name to cart_remove
-    path('checkout/', views.checkout_view, name='checkout'),
-    path('api/cart/add/', views.add_to_cart, name='add_to_cart'),
+    path('checkout/', views.checkout_view, name='checkout'),  # Keep only this checkout URL
+    path('cart/add/', views.add_to_cart, name='cart_add'),  # Changed from add_to_cart
+    path('api/cart/add/', views.add_to_cart, name='api_cart_add'),  # Changed name to avoid conflicts
     path('api/cart/remove/', views.remove_from_cart, name='remove_from_cart'),
     path('api/cart/get-state/', views.get_cart, name='cart_state'),  # Add this line
+    path('api/cart/update/', views.update_cart, name='api_cart_update'),  # Update this line
     path('api/order/create/', views.create_order, name='create_order'),
     path('order/success/', views.order_success, name='order_success'),
     path('login/', views.login_view, name='login'),
@@ -29,11 +31,21 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),  # Add this line
     path('profile/orders/', views.orders_view, name='orders'),  # Add this line
     path('profile/settings/', views.settings_view, name='settings'),  # Add this line
-    path('verify-otp/', views.verify_otp, name='verify_otp'),
+    path('profile/address/add/', views.add_address, name='add_address'),
+    path('profile/wishlist/toggle/', views.toggle_wishlist, name='toggle_wishlist'),
+    path('profile/order/<int:order_id>/', views.get_order_details, name='order_details'),
+    path('verify-otp/', views.verify_otp_view, name='verify_otp'),  # Fix view name
     path('resend-codes/', views.resend_verification_codes, name='resend_codes'),
     path('send-otp/', views.send_otp, name='send_otp'),
     path('api/stock/check/', views.check_stock, name='check_stock'),
+    path('api/profile/update/', views.update_profile, name='update_profile'),
+    path('about/', views.about, name='about'),
+    path('main/', views.main, name='main'),
+    path('privacy_policy/', views.privacy_policy, name='privacy_policy'),
+    path('shipping_policy/', views.shipping_policy, name='shipping_policy'),
+    path('terms_policy/', views.terms_policy, name='terms_policy'),
+    path('return_and_cancellation_policy/', views.return_and_cancellation_policy, name='return_and_cancellation_policy'),
+    path('contact/', views.contact_view, name='contact'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

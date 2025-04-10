@@ -89,14 +89,22 @@ class CartManager {
             const productName = button.dataset.productName;
             const variantId = button.dataset.variantId;
             const requiresVariant = button.dataset.requiresVariant === 'true';
+            
+            // Get quantity input and validate
+            const quantityInput = document.querySelector(`.quantity-input[data-product-id="${productId}"]`) || 
+                                document.getElementById('quantity');
+            const quantity = parseInt(quantityInput?.value || 1);
+            const maxStock = parseInt(quantityInput?.dataset.maxStock || 0);
 
             if (requiresVariant && !variantId) {
                 this.showNotification('Please select a variant first', 'warning');
                 return;
             }
 
-            const quantityInput = document.querySelector(`.quantity-input[data-product-id="${productId}"]`);
-            const quantity = parseInt(quantityInput?.value || 1);
+            if (quantity > maxStock) {
+                this.showNotification(`Only ${maxStock} items available`, 'warning');
+                return;
+            }
 
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';

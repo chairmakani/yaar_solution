@@ -17,26 +17,27 @@ Home
 
 <!-- Shop Header -->
 <section class="shop-header">
-    <h2>Shop</h2>
-    <div class="results-sort">
-        <p>Showing {{ products|length }} of {{ total_pages }} results</p>
-        <div class="sort-container">
-            <form id="sort-form" method="get">
-                <!-- Preserve existing parameters -->
-                <input type="hidden" name="page" value="{{ current_page }}">
-                <input type="hidden" name="min_price" value="{{ min_price }}">
-                <input type="hidden" name="max_price" value="{{ max_price }}">
-                
-                <select id="sort-options" name="sort" onchange="this.form.submit()">
-                    <option value="default" {% if sort_option == 'default' %}selected{% endif %}>Sort by</option>
-                    <option value="price-low-high" {% if sort_option == 'price-low-high' %}selected{% endif %}>Price: Low to High</option>
-                    <option value="price-high-low" {% if sort_option == 'price-high-low' %}selected{% endif %}>Price: High to Low</option>
-                </select>
+    <div class="shop-header-content">
+        <h2>Shop</h2>
+        <div class="results-sort">
+            <p>Showing {{ products|length }} of {{ total_pages }} results</p>
+            <div class="controls-wrapper">
+                <form id="sort-form" method="get">
+                    <input type="hidden" name="page" value="{{ current_page }}">
+                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                    
+                    <select id="sort-options" name="sort" onchange="this.form.submit()">
+                        <option value="default" {% if sort_option == 'default' %}selected{% endif %}>Sort by</option>
+                        <option value="price-low-high" {% if sort_option == 'price-low-high' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price-high-low" {% if sort_option == 'price-high-low' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </form>
                 <button id="toggle-view" type="button" title="Change View">
                     <i class="fas fa-th-large active" title="Grid View" aria-label="Grid View"></i>
                     <i class="fas fa-list" title="List View" aria-label="List View"></i>
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 </section>
@@ -128,6 +129,13 @@ Home
                                 {% endwith %}
                             {% endif %}
                         </h3>
+                        <!-- Add truncated description -->
+                        <p class="product-description">
+                            {{ product.description|truncatechars:150 }}
+                            {% if product.description|length > 150 %}
+                                <a href="{% url 'store:product_detail' product.id %}" class="read-more">Read more</a>
+                            {% endif %}
+                        </p>
                         <div class="price-info">
                             {% if product.has_variants %}
                                 {% with variant_summary=product.get_variant_summary %}

@@ -31,9 +31,9 @@ body {
 }
 
 .checkout-container {
-    max-width: 1400px;
-    margin: 3rem auto;
-    padding: 0 2rem;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 1rem;
 }
 
 .checkout-progress {
@@ -197,9 +197,10 @@ input:focus, select:focus {
 }
 
 .order-summary {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 2rem;
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
     position: sticky;
     top: 2rem;
     height: fit-content;
@@ -468,4 +469,78 @@ label {
     .form-card {
         padding: 1.5rem;
     }
+}
+
+.address-section {
+    margin-bottom: 2rem;
+}
+
+.address-card {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.address-card:hover {
+    border-color: #00a652;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.address-card input[type="radio"] {
+    margin-right: 1rem;
+}
+
+.cart-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.order-totals {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #eee;
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.grand-total {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #00a652;
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    background: #00a652;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: #008442;
+}
+
+.checkout-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }

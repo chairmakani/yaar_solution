@@ -19,14 +19,12 @@
         <div class="cart-content">
             {% if cart %}
                 <div class="cart-items">
-                    {% for key, item in cart.items %}
+                    {% for item in cart %}
                     <div class="cart-item" 
-                         data-item-key="{{ key }}"
-                         data-item-id="{{ item.product_id }}"
+                         data-item-key="{{ item.key }}"
                          data-product-id="{{ item.product_id }}"
                          data-max-stock="{{ item.max_quantity }}"
-                         data-item-price="{{ item.price }}"
-                         {% if item.variant_id %}data-variant-id="{{ item.variant_id }}"{% endif %}>
+                         data-item-price="{{ item.price }}">
                         
                         <div class="item-image">
                             {% if item.image %}
@@ -36,39 +34,60 @@
                         
                         <div class="item-details">
                             <div class="item-info">
-                                <h3>{{ item.name }}</h3>
-                                {% if item.variant_id %}
-                                    <div class="variant-info {% if item.variant_id %}selected{% endif %}">
-                                        <div class="variant-badge">
-                                            <span class="variant-label">Selected:</span>
-                                            <span class="variant-value">
-                                                {% if item.variant.value|floatformat:0 == item.variant.value %}
-                                                    {{ item.variant.value|floatformat:0 }}{{ item.variant.unit }}
-                                                {% else %}
-                                                    {{ item.variant.value }}{{ item.variant.unit }}
-                                                {% endif %}
-                                            </span>
+                                <div class="item-header">
+                                    <h3 class="product-name">{{ item.name }}</h3>
+                                    {% if item.variant %}
+                                        <div class="variant-badge {% if item.max_quantity <= 5 %}low-stock{% endif %}">
+                                            {% with unit=item.variant.unit|default:item.default_unit %}
+                                                {{ item.variant.value|floatformat:"0" }}{{ unit }}
+                                            {% endwith %}
                                         </div>
-                                        <div class="variant-price">
-                                            <span class="price-label">Price per unit:</span>
-                                            <span class="unit-price">₹{{ item.price }}</span>
-                                        </div>
-                                        <div class="stock-info">
-                                            <i class="fas {% if item.max_quantity > 10 %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-                                            <span>{{ item.max_quantity }} available</span>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                                <div class="pricing-info">
-                                    <span class="item-price" data-base-price="{{ item.price }}">₹{{ item.price }}</span>
-                                    {% if item.discount_percentage %}
-                                        <span class="discount-badge">-{{ item.discount_percentage }}%</span>
                                     {% endif %}
+                                </div>
+
+                                <div class="item-meta">
+                                    {% if item.variant %}
+                                        <div class="variant-info">
+                                            <span class="variant-label">Unit Size:</span>
+                                            <div class="variant-details">
+                                                <span class="variant-value">
+                                                    {% with unit=item.variant.unit|default:item.default_unit %}
+                                                        {% if item.variant.value|floatformat:0 == item.variant.value %}
+                                                            {{ item.variant.value|floatformat:0 }}{{ unit }}
+                                                        {% else %}
+                                                            {{ item.variant.value }}{{ unit }}
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </span>
+                                                <span class="price-per-unit">
+                                                    (₹{{ item.price|floatformat:2 }}/{{ item.variant.unit|default:item.default_unit }})
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="default-unit-info">
+                                            <span class="unit-label">Unit:</span>
+                                            <span class="unit-value">{{ item.default_unit|default:"piece" }}</span>
+                                            <span class="price-per-unit">(₹{{ item.price|floatformat:2 }}/{{ item.default_unit|default:"pc" }})</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="pricing-details">
+                                        <div class="price-row">
+                                            <span class="price-label">Price:</span>
+                                            <span class="item-price" data-base-price="{{ item.price }}">₹{{ item.price }}</span>
+                                        </div>
+                                        {% if item.savings %}
+                                            <div class="savings-row">
+                                                <span class="original-price">₹{{ item.original_price }}</span>
+                                                <span class="discount-badge">-{{ item.discount_percentage }}%</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="item-controls">
-                                <div class="quantity-controls" data-item-key="{{ key }}">
+                                <div class="quantity-controls" data-item-key="{{ item.key }}">
                                     <button type="button" class="qty-btn decrease" 
                                             {% if item.quantity <= 1 %}disabled{% endif %}>
                                         <i class="fas fa-minus"></i>
@@ -78,7 +97,7 @@
                                            value="{{ item.quantity }}"
                                            min="1" 
                                            max="{{ item.max_quantity }}"
-                                           data-item-key="{{ key }}"
+                                           data-item-key="{{ item.key }}"
                                            readonly>
                                     <button type="button" class="qty-btn increase" 
                                             {% if item.quantity >= item.max_quantity %}disabled{% endif %}>
@@ -91,16 +110,10 @@
                                         <span class="label">Subtotal:</span>
                                         <span class="item-total" data-base-price="{{ item.price }}">₹{{ item.total }}</span>
                                     </div>
-                                    {% if item.savings %}
-                                    <div class="savings-row">
-                                        <span class="label">You Save:</span>
-                                        <span class="savings-amount">₹{{ item.savings }}</span>
-                                    </div>
-                                    {% endif %}
                                 </div>
 
                                 <button class="remove-btn" 
-                                        data-item-key="{{ key }}"
+                                        data-item-key="{{ item.key }}"
                                         title="Remove item">
                                     <i class="fas fa-trash"></i>
                                     <span class="remove-text">Remove</span>
@@ -115,17 +128,17 @@
                 <div class="cart-summary">
                     <h3>Order Summary</h3>
                     <div class="summary-details">
-                        <div class="summary-row">
+                        <div class="summary-row subtotal-row" data-subtotal="{{ subtotal }}">
                             <span>Subtotal</span>
-                            <span>₹{{ subtotal }}</span>
+                            <span class="cart-subtotal">₹{{ subtotal }}</span>
                         </div>
-                        <div class="summary-row">
+                        <div class="summary-row shipping-row" data-shipping="{{ shipping }}">
                             <span>Shipping</span>
-                            <span>₹{{ shipping }}</span>
+                            <span class="cart-shipping">₹{{ shipping }}</span>
                         </div>
                         <div class="summary-row total">
                             <span>Total</span>
-                            <span>₹{{ total }}</span>
+                            <span class="cart-total-amount">₹{{ total }}</span>
                         </div>
                     </div>
 
@@ -202,6 +215,166 @@ document.addEventListener('DOMContentLoaded', function() {
             NotificationManager.show('Error proceeding to checkout. Please try again.', 'error');
         }
     });
+
+    // Initialize cart update handling
+    document.addEventListener('cart:updated', function(event) {
+        const { count, total } = event.detail;
+        
+        // Update cart count in navbar
+        const cartCount = document.querySelector('.cart-count');
+        if (cartCount) {
+            cartCount.textContent = count;
+        }
+        
+        // Update cart total in navbar
+        const cartTotal = document.querySelector('.cart-total');
+        if (cartTotal) {
+            cartTotal.textContent = `₹${parseFloat(total).toFixed(2)}`;
+        }
+        
+        // Update cart summary if on cart page
+        const cartSummary = document.querySelector('.cart-summary');
+        if (cartSummary) {
+            const subtotalElement = cartSummary.querySelector('.summary-row .subtotal');
+            const totalElement = cartSummary.querySelector('.summary-row.total .total-amount');
+            
+            if (subtotalElement) {
+                subtotalElement.textContent = `₹${parseFloat(total).toFixed(2)}`;
+            }
+            if (totalElement) {
+                const shipping = parseFloat(cartSummary.dataset.shipping || 0);
+                totalElement.textContent = `₹${(parseFloat(total) + shipping).toFixed(2)}`;
+            }
+        }
+    });
+
+    // Listen for cart updates
+    document.addEventListener('cartUpdated', function(event) {
+        const { total_items, total_amount, items } = event.detail;
+        
+        // Update navbar
+        const cartCount = document.querySelector('.cart-count');
+        const cartTotal = document.querySelector('.cart-total');
+        
+        if (cartCount) cartCount.textContent = total_items;
+        if (cartTotal) cartTotal.textContent = `₹${parseFloat(total_amount).toFixed(2)}`;
+        
+        // Update cart summary if on cart page
+        const summarySubtotal = document.querySelector('.summary-row .subtotal');
+        const summaryTotal = document.querySelector('.summary-row.total span:last-child');
+        const shipping = {{ shipping|default:0 }};
+        
+        if (summarySubtotal) {
+            summarySubtotal.textContent = `₹${parseFloat(total_amount).toFixed(2)}`;
+        }
+        if (summaryTotal) {
+            const finalTotal = parseFloat(total_amount) + shipping;
+            summaryTotal.textContent = `₹${finalTotal.toFixed(2)}`;
+        }
+    });
+    
+    // Initialize quantity controls
+    document.querySelectorAll('.quantity-controls').forEach(control => {
+        const input = control.querySelector('.quantity-input');
+        const itemKey = input?.dataset.itemKey;
+        
+        if (!input || !itemKey) return;
+        
+        control.querySelector('.decrease')?.addEventListener('click', async () => {
+            const newQty = parseInt(input.value) - 1;
+            if (newQty >= 1) {
+                await updateCartItem(itemKey, newQty);
+            }
+        });
+        
+        control.querySelector('.increase')?.addEventListener('click', async () => {
+            const newQty = parseInt(input.value) + 1;
+            const maxQty = parseInt(input.max);
+            if (newQty <= maxQty) {
+                await updateCartItem(itemKey, newQty);
+            }
+        });
+    });
+
+    // Function to update cart item
+    async function updateCartItem(itemKey, quantity) {
+        try {
+            const response = await fetch('/api/cart/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    item_key: itemKey,
+                    quantity: quantity
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update item quantity and total
+                const item = document.querySelector(`[data-item-key="${itemKey}"]`);
+                const quantityInput = item?.querySelector('.quantity-input');
+                const itemTotal = item?.querySelector('.item-total');
+                
+                if (quantityInput) quantityInput.value = quantity;
+                if (itemTotal) {
+                    itemTotal.textContent = `₹${parseFloat(data.item_total).toFixed(2)}`;
+                    itemTotal.classList.add('price-updated');
+                    setTimeout(() => itemTotal.classList.remove('price-updated'), 300);
+                }
+
+                // Update overall cart totals
+                updateCartTotals(data.cart);
+
+                // Trigger cart update event
+                document.dispatchEvent(new CustomEvent('cartUpdated', {
+                    detail: {
+                        total_items: data.cart.total_items,
+                        total_amount: data.cart.total_amount,
+                        subtotal: data.cart.subtotal,
+                        items: data.cart.items
+                    }
+                }));
+            } else {
+                throw new Error(data.message || 'Failed to update cart');
+            }
+        } catch (error) {
+            console.error('Error updating cart:', error);
+            showNotification('Error updating cart', 'error');
+        }
+    }
+
+    // Add this new function for price updates
+    function updateCartTotals(data) {
+        // Update subtotal
+        const subtotalElement = document.querySelector('.cart-subtotal');
+        if (subtotalElement) {
+            subtotalElement.textContent = `₹${parseFloat(data.subtotal).toFixed(2)}`;
+        }
+
+        // Update shipping if it changes based on subtotal
+        const shippingElement = document.querySelector('.cart-shipping');
+        const shipping = parseFloat(document.querySelector('.shipping-row').dataset.shipping);
+        if (shippingElement) {
+            shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+        }
+
+        // Update total
+        const totalElement = document.querySelector('.cart-total-amount');
+        if (totalElement) {
+            const total = parseFloat(data.subtotal) + shipping;
+            totalElement.textContent = `₹${total.toFixed(2)}`;
+        }
+
+        // Update navbar cart total
+        const navbarTotal = document.querySelector('.cart-total');
+        if (navbarTotal) {
+            navbarTotal.textContent = `₹${parseFloat(data.total_amount).toFixed(2)}`;
+        }
+    }
 });
 </script>
 {% endblock %}

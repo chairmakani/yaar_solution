@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="payment-success">
+    <i class="fas fa-check-circle success-icon"></i>
+    <h1>Payment Successful!</h1>
+    <p>Your order #{{ order.order_number }} has been placed successfully.</p>
+    <div class="order-details">
+        <p>Amount Paid: ₹{{ order.total_amount }}</p>
+        <p>Order Status: {{ order.status|title }}</p>
+        <p>Payment ID: {{ order.razorpay_payment_id }}</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'store:order_details' order.id %}" class="btn btn-primary">View Order</a>
+        <a href="{% url 'store:home' %}" class="btn btn-secondary">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

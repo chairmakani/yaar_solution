@@ -18,6 +18,10 @@ class Location(models.Model):
     def __str__(self):
         return self.name
 
+def ngo_image_path(instance, filename):
+    """Store NGO images in store/static/media/ngos/<ngo_id>/"""
+    return f'ngos/{instance.id}/{filename}'
+
 class NGO(models.Model):
     shg_name = models.CharField(max_length=200, db_index=True, help_text="Self Help Group name")
     panchayat_name = models.CharField(max_length=200, default='Default Panchayat')
@@ -25,7 +29,12 @@ class NGO(models.Model):
     contact_person = models.CharField(max_length=100, default='Contact Person')
     mobile_number = models.CharField(max_length=15, default='0000000000')
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    image = models.ImageField(upload_to='ngo_images/', null=True, blank=True)
+    image = models.ImageField(
+        upload_to=ngo_image_path, 
+        null=True, 
+        blank=True,
+        help_text="Image will be stored in store/static/media/ngos/<ngo_id>/"
+    )
     location = models.ForeignKey(Location, related_name='ngos', on_delete=models.CASCADE)
 
     def get_absolute_url(self):
@@ -67,6 +76,18 @@ class VariantType(models.Model):
     def __str__(self):
         return f"{self.name} ({self.unit})"
 
+class StandardUnit(models.TextChoices):
+    PIECES = 'pc', 'Pieces'
+    GRAMS = 'g', 'Grams'
+    KILOGRAMS = 'kg', 'Kilograms'
+    MILLILITERS = 'ml', 'Milliliters'
+    LITERS = 'l', 'Liters'
+    METERS = 'm', 'Meters'
+    CENTIMETERS = 'cm', 'Centimeters'
+    SQUARE_METERS = 'sqm', 'Square Meters'
+    PACK = 'pack', 'Pack'
+    BOX = 'box', 'Box'
+
 class Product(models.Model):
     name = models.CharField(max_length=200, db_index=True)
     description = models.TextField(blank=True, null=True)
@@ -83,6 +104,18 @@ class Product(models.Model):
     stock_threshold = models.PositiveIntegerField(
         default=10,
         help_text="Minimum stock level before notification"
+    )
+    standard_unit = models.CharField(
+        max_length=20,
+        choices=StandardUnit.choices,
+        default=StandardUnit.PIECES,
+        help_text="Standard unit of measurement for this product"
+    )
+    unit_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1,
+        help_text="Value in standard units (e.g., 500 for 500g)"
     )
 
     @property
@@ -210,6 +243,13 @@ class Product(models.Model):
             self.price = self.base_price
         super().save(*args, **kwargs)
 
+    def get_unit_display_value(self):
+        """Returns formatted unit display (e.g., '500g' or '1 Piece')"""
+        unit_label = self.get_standard_unit_display()
+        if self.standard_unit in ['pc', 'pack', 'box']:
+            return f"{int(self.unit_value)} {unit_label}"
+        return f"{self.unit_value}{self.standard_unit}"
+
     class Meta:
         ordering = ['name']
         indexes = [
@@ -217,9 +257,17 @@ class Product(models.Model):
             models.Index(fields=['price']),
         ]
 
+def product_image_path(instance, filename):
+    # Organize product images: products/product_id/filename
+    return f'products/{instance.product.id}/{filename}'
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='product_images/')
+    image = models.ImageField(
+        upload_to=product_image_path,
+        blank=True,
+        null=True
+    )
     order = models.PositiveIntegerField(default=0)
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=200, blank=True)
@@ -338,6 +386,12 @@ class CartItem(models.Model):
     def total_price(self):
         return self.price * self.quantity
 
+    @property
+    def variant_display(self):
+        if self.variant:
+            return f"{self.variant.value} {self.variant.get_unit_display()}"
+        return None
+
     class Meta:
         unique_together = ('cart', 'product')
 
@@ -382,6 +436,52 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.email}'s profile"
 
+class Address(models.Model):
+    ADDRESS_TYPES = (
+        ('home', 'Home'),
+        ('work', 'Work'),
+        ('other', 'Other')
+    )
+
+    STATES = (
+        ('AP', 'Andhra Pradesh'),
+        ('AR', 'Arunachal Pradesh'),
+        # ...add other states...
+        ('WB', 'West Bengal'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    alternate_phone = models.CharField(max_length=15, blank=True, null=True)
+    street = models.CharField(max_length=255)
+    landmark = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100, choices=STATES)
+    pincode = models.CharField(max_length=10)
+    type = models.CharField(max_length=10, choices=ADDRESS_TYPES, default='home')
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_default', '-created_at']
+        verbose_name_plural = 'Addresses'
+        indexes = [
+            models.Index(fields=['user', 'is_default']),
+            models.Index(fields=['pincode']),
+        ]
+
+    def get_full_address(self):
+        return f"{self.street}, {self.city}, {self.state} - {self.pincode}"
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            # Set all other addresses of user as non-default
+            Address.objects.filter(user=self.user).update(is_default=False)
+        super().save(*args, **kwargs)
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     """Create or get UserProfile when User is created."""
@@ -422,9 +522,11 @@ class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('processing', 'Processing'),
+        ('confirmed', 'Confirmed'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded')
     ]
 
     PAYMENT_STATUS_CHOICES = [
@@ -434,60 +536,71 @@ class Order(models.Model):
         ('refunded', 'Refunded')
     ]
 
+    PAYMENT_METHOD_CHOICES = [
+        ('razorpay', 'Razorpay'),
+        ('cod', 'Cash on Delivery'),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     order_number = models.CharField(max_length=20, unique=True)
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField()
-    phone = models.CharField(max_length=15)
-    address = models.TextField()
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=10)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name='orders')
+    items_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        help_text="Total order amount including items, shipping and tax"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    payment_id = models.CharField(max_length=100, blank=True, null=True)
-    payment_method = models.CharField(max_length=50, blank=True, null=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='razorpay')
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_date = models.DateTimeField(null=True, blank=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    tracking_number = models.CharField(max_length=100, blank=True, null=True)
-    delivery_notes = models.TextField(blank=True, null=True)
-    is_paid = models.BooleanField(default=False)
+    estimated_delivery = models.DateField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def total(self):
+        """Property to maintain compatibility with admin"""
+        return self.total_amount
 
     class Meta:
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'status']),
+            models.Index(fields=['order_number']),
             models.Index(fields=['payment_status']),
-            models.Index(fields=['created_at'])
+            models.Index(fields=['created_at']),
         ]
-
-    def __str__(self):
-        return f"Order {self.order_number}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = self.generate_order_number()
+            
+        # Calculate total_amount before saving
+        self.total_amount = self.items_total + self.shipping_fee + self.tax_amount
+        
         super().save(*args, **kwargs)
 
+    def calculate_total(self):
+        return self.items_total + self.shipping_fee + self.tax_amount
+
     def generate_order_number(self):
-        """Generate unique order number"""
         date_str = timezone.now().strftime('%Y%m%d')
         count = Order.objects.filter(
             created_at__date=timezone.now().date()
         ).count() + 1
         return f"ORD{date_str}{count:04d}"
 
-    @property
-    def total_items(self):
-        return sum(item.quantity for item in self.items.all())
-
-    @property
-    def order_total(self):
-        return self.total + self.tax + self.shipping_cost
+    def __str__(self):
+        return f"Order {self.order_number}"
 
 class OrderItem(models.Model):
     """Model for storing order line items"""
@@ -519,3 +632,32 @@ class OrderItem(models.Model):
                 'image_url': self.product.primary_image.url if self.product.primary_image else None
             }
         super().save(*args, **kwargs)
+
+class WishlistItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-created_at']
+
+class UserActivity(models.Model):
+    ACTIVITY_TYPES = (
+        ('order', 'Order'),
+        ('wishlist', 'Wishlist'),
+        ('review', 'Review'),
+        ('account', 'Account'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'User Activities'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.activity_type} - {self.timestamp}"

@@ -137,9 +137,14 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'user', 'total', 'status', 'payment_status', 'created_at']
+    list_display = ['order_number', 'user', 'total_amount', 'status', 'created_at']
     list_filter = ['status', 'payment_status', 'created_at']
-    search_fields = ['order_number', 'user__email', 'phone']
+    search_fields = ['order_number', 'user__email']
+    readonly_fields = ['order_number', 'created_at', 'updated_at']
+    
+    def total(self, obj):
+        return obj.total_amount
+    total.short_description = 'Total Amount'
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
