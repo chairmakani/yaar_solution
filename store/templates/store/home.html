@@ -1,0 +1,226 @@
+<!-- filepath: /e:/yaarsolution_project/ecommerce/store/templates/store/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+Home
+{% endblock %}
+
+{% block content2 %}
+{% load static %}
+
+<!-- Include FontAwesome for icons -->
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/shop.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
+{% endblock extra_css %}
+
+<!-- Shop Header -->
+<section class="shop-header">
+    <div class="shop-header-content">
+        <h2>Shop</h2>
+        <div class="results-sort">
+            <p>Showing {{ products|length }} of {{ total_pages }} results</p>
+            <div class="controls-wrapper">
+                <form id="sort-form" method="get">
+                    <input type="hidden" name="page" value="{{ current_page }}">
+                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                    
+                    <select id="sort-options" name="sort" onchange="this.form.submit()">
+                        <option value="default" {% if sort_option == 'default' %}selected{% endif %}>Sort by</option>
+                        <option value="price-low-high" {% if sort_option == 'price-low-high' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price-high-low" {% if sort_option == 'price-high-low' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </form>
+                <button id="toggle-view" type="button" title="Change View">
+                    <i class="fas fa-th-large active" title="Grid View" aria-label="Grid View"></i>
+                    <i class="fas fa-list" title="List View" aria-label="List View"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Shop Layout -->
+<div class="shop-layout">
+    <!-- Sidebar -->
+    <section class="categories">
+        <!-- Categories Section -->
+        <div class="sidebar-section">
+            <h3><i class="fas fa-list"></i> Categories</h3>
+            <ul>
+                {% for category in categories %}
+                    <li>
+                        <a href="{% url 'store:category_products' category.id %}">
+                            <span class="category-name">{{ category.name }}</span>
+                            <span class="count">({{ category.products.count }})</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Price Filter Section -->
+        <div class="sidebar-section price-filter">
+            <h3>
+                <i class="fas fa-filter"></i>
+                Filter By Price
+            </h3>
+            <form method="get" id="price-filter-form" class="price-filter-form">
+                <input type="hidden" name="sort" value="{{ sort_option }}">
+                <div class="price-inputs">
+                    <div class="price-field">
+                        <span class="currency">₹</span>
+                        <input type="text" 
+                               id="min-price" 
+                               name="min_price" 
+                               value="{{ min_price }}"
+                               readonly>
+                        <div class="price-dot"></div>
+                        <label for="min-price">Min Price</label>
+                    </div>
+                    <div class="price-separator">
+                        <span></span>
+                    </div>
+                    <div class="price-field">
+                        <span class="currency">₹</span>
+                        <input type="text" 
+                               id="max-price" 
+                               name="max_price" 
+                               value="{{ max_price }}"
+                               readonly>
+                        <div class="price-dot"></div>
+                        <label for="max-price">MaxPrice</label>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <div id="price-slider" data-max-price="{{ max_price_filtered }}"></div>
+                </div>
+
+                <button type="submit" class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Apply Filter
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section id="product-grid" class="products grid-view">
+        {% for product in products %}
+            <div class="product-card">
+                <div class="product" data-product-id="{{ product.id }}">
+                    <a href="{% url 'store:product_detail' product.id %}">
+                        {% if product.primary_image %}
+                            <img class="lazy-image" src="{% static 'images/placeholder.png' %}" 
+                                 data-src="{{ product.primary_image.image.url }}" 
+                                 alt="{{ product.name }}">
+                        {% endif %}
+                    </a>
+                    <div class="product-details">
+                        <h3>{{ product.name }}
+                            {% if product.has_variants %}
+                                {% with variant_summary=product.get_variant_summary %}
+                                <span class="variants-info">
+                                    Starting from ₹{{ variant_summary.price_range.min }}
+                                </span>
+                                {% endwith %}
+                            {% endif %}
+                        </h3>
+                        <!-- Add truncated description -->
+                        <p class="product-description">
+                            {{ product.description|truncatechars:150 }}
+                            {% if product.description|length > 150 %}
+                                <a href="{% url 'store:product_detail' product.id %}" class="read-more">Read more</a>
+                            {% endif %}
+                        </p>
+                        <div class="price-info">
+                            {% if product.has_variants %}
+                                {% with variant_summary=product.get_variant_summary %}
+                                <span class="price">
+                                    ₹{{ variant_summary.price_range.min }} - ₹{{ variant_summary.price_range.max }}
+                                </span>
+                                {% endwith %}
+                            {% else %}
+                                <span class="price">₹{{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        {% if product.has_variants %}
+                            <a href="{% url 'store:product_detail' product.id %}" class="select-options-btn">
+                                <i class="fas fa-list-ul"></i> Select Options
+                            </a>
+                        {% else %}
+                            <!-- Regular add to cart button for non-variant products -->
+                            <div class="quantity-controls">
+                                <div class="quantity-selector" data-product-id="{{ product.id }}">
+                                    <button class="qty-btn decrease" type="button">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                           class="quantity-input" 
+                                           value="1" 
+                                           min="1"
+                                           readonly
+                                           data-product-id="{{ product.id }}"
+                                           data-max-stock="{{ product.stock }}"
+                                           data-base-price="{{ product.price }}">
+                                    <button class="qty-btn increase" type="button">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="stock-status {% if product.stock == 0 %}out-of-stock{% elif product.stock <= 5 %}low-stock{% else %}in-stock{% endif %}">
+                                    <span class="stock-indicator"></span>
+                                    <span class="stock-text">
+                                        {% if product.stock == 0 %}
+                                            Out of Stock
+                                        {% elif product.stock <= 5 %}
+                                            Few Items Left
+                                        {% else %}
+                                            In Stock
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <button class="add-to-cart-btn btn" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        {% if product.has_variants %}data-requires-variant="true"{% endif %}>
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if current_page > 1 %}
+        <button class="prev-next-button" id="prev-page">
+            <a href="?page={{ current_page|add:'-1' }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_option }}">Prev</a>
+        </button>
+    {% endif %}
+    <span id="page-info" data-current-page="{{ current_page }}" data-total-pages="{{ total_pages }}">
+        Page {{ current_page }} of {{ total_pages }}
+    </span>
+    {% if current_page < total_pages %}
+        <button class="prev-next-button" id="next-page">
+            <a href="?page={{ current_page|add:'1' }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_option }}">Next</a>
+        </button>
+    {% endif %}
+</div>
+
+{% endblock content2 %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/cart.js' %}"></script>
+<script src="{% static 'js/shop.js' %}"></script>
+<script src="{% static 'js/quantity-manager.js' %}"></script>
+<script src="{% static 'js/cart-manager.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
+{% endblock extra_js %}

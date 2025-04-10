@@ -1,0 +1,17 @@
+<ul class="dropdown-menu-ngos">
+    {% for location, ngos in ngo_menu.items %}
+    <li class="dropdown-ngos">
+        <a href="#">{{ location }}</a>
+        <ul class="sub-dropdown-menu">
+            {% for ngo in ngos %}
+            <li>
+                <a href="{% url 'store:ngo_detail' ngo.id %}">
+                    {{ ngo.shg_name }} 
+                    <small>({{ ngo.contact_person }})</small>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>

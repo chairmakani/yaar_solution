@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}contact page{% endblock %}
+{% load static %}
+    {% block extra_css %}
+    {{ block.super }}
+    <style>
+       body {
+        margin: 0;
+        padding: 0;
+        }
+        
+        .text-center {
+            margin-top: 80px;
+            text-align: center;
+        }
+        .large-heading {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        .contact-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            margin-top: 150px;
+        }
+        .contact-container h3 {
+            margin-bottom: 20px;
+        }
+        .contact-column {
+            flex: 1;
+            padding: 20px;
+            margin: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .contact-column:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .contact-left {
+            text-align: left;
+        }
+        .contact-center {
+            text-align: center;
+        }
+        .contact-right {
+            text-align: right;
+        }
+        </style>
+    {% endblock %}
+    {% block content %}
+    {{ block.super }}
+    {% endblock %}
+
+{% block content2  %}
+<h6 class="text-center">I Hope You Have a Good Relationship</h6><br>
+<h1 class="large-heading">Contact Details</h1>
+
+<div class="contact-container">
+    <div class="contact-column contact-center">
+        <h3>Number</h3>
+        <p>+91 9488674103</p>
+    </div>
+    <div class="contact-column contact-center">
+        <h3>Email</h3>
+        <p>yaar solution@gamil.com</p>
+    </div>
+    <div class="contact-column contact-center">
+        <h3>Address</h3>
+        <p>No.175c/6, Munthal Road,Punnaiyapuram,<br>Puliyankudi,Tenkasi Dt.-627 751.TamilNadu</p>
+    </div>
+    <div class="contact-column contact-center">
+        <h3>Site Link</h3>
+        <p>WWW.Yaar.co.in</p>
+    </div>
+</div>
+{% endblock %}

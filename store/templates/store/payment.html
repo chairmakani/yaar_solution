@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="payment-container">
+    <h1>Complete Payment</h1>
+    
+    <div class="order-info">
+        <h2>Order #{{ order.order_number }}</h2>
+        <p>Amount: ₹{{ order.total_amount }}</p>
+    </div>
+
+    <form action="{% url 'store:paymenthandler' %}" method="POST" id="payment-form">
+        {% csrf_token %}
+        <input type="hidden" name="order_id" value="{{ order.id }}">
+        <input type="hidden" name="amount" value="{{ razorpay_amount }}">
+        <script
+            src="https://checkout.razorpay.com/v1/checkout.js"
+            data-key="{{ razorpay_merchant_key }}"
+            data-amount="{{ razorpay_amount }}"
+            data-currency="{{ currency }}"
+            data-order_id="{{ razorpay_order_id }}"
+            data-buttontext="Pay Now"
+            data-name="YAAR SOLUTION"
+            data-description="Order Payment"
+            data-prefill.name="{{ request.user.get_full_name }}"
+            data-prefill.email="{{ request.user.email }}"
+            data-prefill.contact="{{ request.user.profile.phone_number }}"
+            data-theme.color="#00a652">
+        </script>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-trigger Razorpay checkout
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('.razorpay-payment-button').click();
+    });
+</script>
+{% endblock %}

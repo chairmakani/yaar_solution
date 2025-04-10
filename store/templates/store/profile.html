@@ -1,0 +1,202 @@
+{# filepath: e:\work env\ecommerce\store\templates\store\profile.html #}
+{% load static %}
+
+{% block title %}My Profile - YAAR SOLUTION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/profile2.css' %}">
+{% endblock %}
+
+{% block content2 %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {{ user.first_name|first|upper }}
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-name" data-field="name">{{ user.get_full_name }}</h1>
+            <div class="profile-email" data-field="email">{{ user.email }}</div>
+            {% if user.profile.email_verified %}
+                <div class="verification-badge verified">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Email Verified</span>
+                </div>
+            {% else %}
+                <div class="verification-badge unverified">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Email Not Verified</span>
+                </div>
+            {% endif %}
+        </div>
+        <button class="edit-btn" onclick="editProfile()">
+            <i class="fas fa-edit"></i>
+            Edit Profile
+        </button>
+    </div>
+
+    <div class="profile-sections">
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-user"></i>
+                Personal Information
+            </h2>
+            <div class="section-content">
+                <div class="info-group">
+                    <span class="info-label">Full Name</span>
+                    <span class="info-value" data-field="full-name">{{ user.get_full_name }}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ user.email }}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Phone</span>
+                    <span class="info-value">{{ user.profile.phone_number|default:"Not provided" }}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Member Since</span>
+                    <span class="info-value">{{ user.date_joined|date:"F j, Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-shopping-bag"></i>
+                Order Statistics
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_orders|default:"0" }}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹{{ total_spent|default:"0" }}</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ active_orders|default:"0" }}</div>
+                    <div class="stat-label">Active Orders</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- Recent Orders Section -->
+        <div class="recent-orders">
+            <h3 class="section-title">
+                <i class="fas fa-shopping-bag"></i> Recent Orders
+            </h3>
+            <div class="order-list">
+                {% for order in recent_orders %}
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <strong>Order #{{ order.order_number }}</strong>
+                            <div class="text-muted">{{ order.created_at|date:"M d, Y" }}</div>
+                        </div>
+                        <div class="order-status {{ order.status }}">{{ order.status|title }}</div>
+                    </div>
+                    <div class="order-details">
+                        <div>Total: ₹{{ order.total }}</div>
+                        <div>Items: {{ order.total_items }}</div>
+                    </div>
+                    <a href="{% url 'store:order_detail' order.id %}" class="btn-link">View Details</a>
+                </div>
+                {% empty %}
+                <p>No orders yet</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Addresses Section -->
+        <div class="address-section">
+            <h3 class="section-title">
+                <i class="fas fa-map-marker-alt"></i> My Addresses
+                <button class="add-btn" onclick="addAddress()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </h3>
+            <div class="address-list">
+                {% for address in addresses %}
+                <div class="address-card">
+                    <span class="address-type">{{ address.type }}</span>
+                    <strong>{{ address.name }}</strong>
+                    <p>{{ address.street }}, {{ address.city }}</p>
+                    <p>{{ address.state }} - {{ address.pincode }}</p>
+                    <p>Phone: {{ address.phone }}</p>
+                </div>
+                {% empty %}
+                <p>No addresses added</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-methods">
+            <h3 class="section-title">
+                <i class="fas fa-credit-card"></i> Payment Methods
+                <button class="add-btn" onclick="addPaymentMethod()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </h3>
+            <div class="card-list">
+                {% for card in payment_methods %}
+                <div class="card-item">
+                    <i class="fab fa-cc-{{ card.brand|lower }}"></i>
+                    <div>
+                        <div>•••• •••• •••• {{ card.last4 }}</div>
+                        <div class="text-muted">Expires {{ card.exp_month }}/{{ card.exp_year }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No payment methods added</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Wishlist -->
+        <div class="wishlist-section">
+            <h3 class="section-title">
+                <i class="fas fa-heart"></i> My Wishlist
+            </h3>
+            <div class="wishlist-grid">
+                {% for item in wishlist_items %}
+                <div class="product-card mini">
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                    <div class="product-info">
+                        <div class="product-name">{{ item.product.name }}</div>
+                        <div class="product-price">₹{{ item.product.price }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>Your wishlist is empty</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="activity-timeline">
+            <h3 class="section-title">
+                <i class="fas fa-history"></i> Recent Activity
+            </h3>
+            <div class="timeline">
+                {% for activity in recent_activities %}
+                <div class="timeline-item">
+                    <div class="activity-time">{{ activity.timestamp|timesince }} ago</div>
+                    <div class="activity-content">{{ activity.description }}</div>
+                </div>
+                {% empty %}
+                <p>No recent activity</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}

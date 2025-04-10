@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Search Results - {{ query }}{% endblock %}
+
+{% block content2 %}
+<main class="container search-page" style="margin-top: 150px;">
+    <header class="search-header">
+        <h1 class="fade-in">Search Results for "{{ query }}"</h1>
+        
+        <form class="search-form slide-in" method="GET" action="{% url 'store:product_search' %}">
+            <input type="text" name="query" value="{{ query }}" placeholder="Search products...">
+            <button type="submit" class="pulse">Search</button>
+        </form>
+    </header>
+
+    {% if products %}
+        <div class="product-grid animate-grid">
+            {% for product in products %}
+                <article class="product-card fade-in">
+                    <div class="product-image">
+                        {% if product.primary_image %}
+                            <img loading="lazy" src="{{ product.primary_image.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <img loading="lazy" src="{% static 'images/default-product.png' %}" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h2>{{ product.name }}</h2>
+                        <p class="price">₹{{ product.price }}</p>
+                        <p class="description">{{ product.description|truncatewords:15 }}</p>
+                        <a href="{% url 'store:product_detail' product.id %}" class="view-details">View Details</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-results fade-in">
+            <h2>No products found</h2>
+            <p>Try different keywords or browse our categories.</p>
+        </div>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/search.js' %}"></script>
+{% endblock %}

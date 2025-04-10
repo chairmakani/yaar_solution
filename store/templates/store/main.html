@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% block title %}Main Page{% endblock %}
+{% load static %}
+    {% block extra_css %}
+    {{ block.super }}
+
+    <style>
+        /* Slider container */
+       
+        .slider {
+            position: relative;
+            width: 100%;
+            max-width: 1500px;
+            overflow: hidden;
+            margin: auto;
+        }
+
+        /* Slider images */
+        .slider-images {
+            display: flex;
+            transition: transform 1s ease-in-out;
+        }
+
+        .slider-images img {
+            width: 1500px; /* Adjusted width to fit img-7.jpg */
+            height: 650px; /* Adjusted height to fit img-7.jpg */
+            object-fit:fill; /* Ensures the image fits within the dimensions */
+            flex-shrink: 0;
+        }
+
+        /* Navigation buttons */
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .slider-btn.left {
+            left: 10px;
+        }
+
+        .slider-btn.right {
+            right: 10px;
+        }
+
+        .small-images {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .small-images img {
+            width: 450px; /* Reduce size */
+            height: auto;
+            margin: 0 10px;
+        }
+
+        .vertical-line {
+            border-left: 2px solid green;
+            height: 100px;
+            margin: 0 10px;
+        }
+
+        /* View All button */
+.link-tag-remove{
+    text-decoration: none;
+    color: white ;
+
+}
+.view-all {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 20px auto;
+}
+  
+.view-all:hover {
+    transform: scale(1.1);
+    background: darkgreen;
+}
+
+/* Header styles */
+.carousel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-left: 80px; /* Added padding to move the link to the right */
+}
+  
+.carousel-header h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0;
+}
+  
+.carousel-header a {
+    font-size: 1rem;
+    color: green;
+    text-decoration: none;
+}
+  
+.cart-icon {
+    width: 24px;
+    height: 24px;
+}
+/*feature image side*/
+.carousel-container {
+    position: relative;
+    width: 90%;
+    overflow: hidden;
+    margin: 100px;
+}
+
+/* Carousel */
+.carousel {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+}
+
+.carousel-item {
+    flex: 1 0 calc(100% / 5); /* Five items per slide */
+    box-sizing: border-box;
+    text-align: center;
+    padding: 5px; /* Reduced padding */
+}
+
+.carousel-item img {
+    width: 200px; /* Adjusted width */
+    height: 150px; /* Adjusted height */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.carousel-item:hover img {
+    transform: scale(1.01);
+}
+
+.carousel-item p {
+    margin-top: 30px;
+}
+
+/* Navigation Controls */
+.carousel-control {
+    position: absolute;
+    top: 40%; /* Adjusted from 80% to move buttons up */
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%; /* Makes the buttons circular */
+    width: 40px; /* Set equal width and height */
+    height: 40px;
+    text-align: center; /* Centers the content */
+    display: flex; /* Added for centering */
+    align-items: center; /* Centers vertically */
+    justify-content: center; /* Centers horizontally */
+    cursor: pointer;
+    z-index: 1;
+    font-size: 1.5rem;
+}
+
+.carousel-control.prev {
+    left: 10px;
+}
+
+.carousel-control.next {
+    right: 10px;
+}
+
+    </style>
+    {% endblock %}
+    {% block content %}
+    {{ block.super }}
+     {% endblock %}
+
+{% block content2  %}
+
+    <div class="slider">
+        <div class="slider-images">
+            <img src="{% static 'images/img-1.jpg' %}" alt="Image 1">
+            <img src="{% static 'images/img-2.jpg' %}" alt="Image 2">
+            <img src="{% static 'images/img-3.jpg' %}" alt="Image 3">
+            <img src="{% static 'images/img-4.jpg' %}" alt="Image 4">
+            <img src="{% static 'images/img-5.jpg' %}" alt="Image 5">
+            <img src="{% static 'images/img-6.jpg' %}" alt="Image 6">
+            <img src="{% static 'images/img-7.jpg' %}" alt="Image 7">
+            <img src="{% static 'images/img-8.jpg' %}" alt="Image 8">
+            <img src="{% static 'images/img-9.jpg' %}" alt="Image 9">
+            <img src="{% static 'images/img-10.jpg' %}" alt="Image 10">
+            <img src="{% static 'images/img-11.jpg' %}" alt="Image 11">
+        </div>
+        <button class="slider-btn left" onclick="moveSlide(-1)">&#10094;</button>
+        <button class="slider-btn right" onclick="moveSlide(1)">&#10095;</button>
+    </div>  
+    
+    <!-- Home Page Content -->
+    <div class="carousel-container">
+        <div class="carousel-header">
+            <h2>Featured Categories <a href="{% url 'store:home' %}">Shop all</a></h2>
+        </div><br><br>
+
+        <div class="carousel">
+            {% for product in featured_products %}
+            <div class="carousel-item">
+                <img src="{{ product.primary_image.image.url|default:'placeholder.jpg' }}" alt="{{ product.name }}">
+                <p>{{ product.name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        
+        <!-- Navigation Controls -->
+        <button class="view-all" style="margin-top: 50px;">
+            <i class="fas fa-shopping-cart"></i><a class="link-tag-remove" href="Categories\Shop-all\shop-all.html">View All</a>
+        </button>
+    </div>
+    
+    
+    <!--footer-->
+    <div class="small-images">
+        <img src="{% static 'images/courier.png' %}" alt="Courier service">
+        <div class="vertical-line"></div>
+        <img src="{% static 'images/payment.jpg' %}" alt="Payment options">
+    </div>
+    <div style="text-align: center; margin-top:20px; ">
+        <img src="{% static 'images/fssai logo.jpg' %}" alt="fssai logo" style="width: 150px; height:100px;">
+    </div>
+    
+    <div class="info" style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+        <h3>Address</h3><br>
+
+        <p>Yaar Solution,No.175c/6, Munthal Road, Punnaiyapuram,<br> Puliyankudi, Tenkasi Dt.-627 751. TAMILNADU</p>
+        <p>Phone: +91 9488674103</p>
+        <p>www.yaar.co.in</p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{% url 'store:privacy_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Privacy Policy</a>
+        <a href="{% url 'store:shipping_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Shipping Policy</a>
+        <a href="{% url 'store:terms_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Terms Policy</a>
+        <a href="{% url 'store:return_and_cancellation_policy' %}" style="color: black; text-decoration: none;">Return and Cancellation Policy</a>
+        <a href="{% url 'store:contact' %}" style="margin-left: 15px; color: black; text-decoration: none;">Contact</a>
+    </div>
+    <br><br><br>
+    {% endblock %}
+
+    {% block extra_js %}
+    {{ block.super }}
+    
+
+    <script>
+        const sliderImages = document.querySelector('.slider-images');
+        const images = document.querySelectorAll('.slider-images img');
+        const totalImages = images.length;
+
+        // Clone the first image and append it to the end for seamless looping
+        const firstImageClone = images[0].cloneNode(true);
+        sliderImages.appendChild(firstImageClone);
+
+        let currentIndex = 0;
+
+        function autoSlide() {
+            currentIndex++;
+            sliderImages.style.transition = 'transform 1s ease-in-out';
+            sliderImages.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+            // Reset to the start without transition when reaching the cloned image
+            if (currentIndex === totalImages) {
+                setTimeout(() => {
+                    sliderImages.style.transition = 'none';
+                    sliderImages.style.transform = 'translateX(0)';
+                    currentIndex = 0;
+                }, 1000); // Match the transition duration
+            }
+        }
+
+        setInterval(autoSlide, 3000);
+    </script>
+    {% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/shop.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
+{% endblock %}
+
+{% block title %}{{ category.name }} - Products{% endblock %}
+
+{% block header_title %}{{ category.name }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><i class="fas fa-chevron-right"></i></li>
+<li class="active">{{ category.name }}</li>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% endblock %}
+
+{% block content2 %}
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <a href="{% url 'store:home' %}">Home</a> >
+    <span>{{ category.name }}</span>
+</div>
+
+<!-- Shop Header with Sort and Results Count -->
+<section class="shop-header">
+    <h2>{{ category.name }}</h2>
+    <div class="results-sort">
+        <p>Showing {{ products|length }} of {{ products_count }} results</p>
+        <div class="sort-container">
+            <form id="sort-form" method="get">
+                <!-- Preserve existing filters in hidden inputs -->
+                <input type="hidden" name="min_price" value="{{ min_price }}">
+                <input type="hidden" name="max_price" value="{{ max_price }}">
+                
+                <select id="sort-options" name="sort" onchange="document.getElementById('sort-form').submit()">
+                    <option value="default" {% if sort_option == 'default' %}selected{% endif %}>Sort by</option>
+                    <option value="price-low-high" {% if sort_option == 'price-low-high' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price-high-low" {% if sort_option == 'price-high-low' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="name-a-z" {% if sort_option == 'name-a-z' %}selected{% endif %}>Name: A to Z</option>
+                    <option value="name-z-a" {% if sort_option == 'name-z-a' %}selected{% endif %}>Name: Z to A</option>
+                </select>
+                <button id="toggle-view" type="button" title="Change View">
+                    <i class="fas fa-th-large active" title="Grid View"></i>
+                    <i class="fas fa-list" title="List View"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<div class="shop-layout">
+    <!-- Sidebar with combined Categories and Price Filter -->
+    <section class="categories">
+        <!-- Categories Section -->
+        <div class="sidebar-section">
+            <h3><i class="fas fa-list"></i> Categories</h3>
+            <ul>
+                {% for cat in categories %}
+                    <li class="{% if cat.id == category.id %}active{% endif %}">
+                        <a href="{% url 'store:category_products' cat.id %}">
+                            {{ cat.name }}
+                            <span class="count">({{ cat.products.count }})</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Price Filter Section -->
+        <div class="sidebar-section price-filter">
+            <h3>
+                <i class="fas fa-filter"></i>
+                Filter By Price
+            </h3>
+            <form method="get" id="price-filter-form" class="price-filter-form">
+                <input type="hidden" name="sort" value="{{ sort_option }}">
+                <div class="price-inputs">
+                    <div class="price-field">
+                        <span class="currency">₹</span>
+                        <input type="text" 
+                               id="min-price" 
+                               name="min_price" 
+                               value="{{ min_price }}"
+                               readonly>
+                        <div class="price-dot"></div>
+                        <label for="min-price">Min Price</label>
+                    </div>
+                    <div class="price-separator">
+                        <span></span>
+                    </div>
+                    <div class="price-field">
+                        <span class="currency">₹</span>
+                        <input type="text" 
+                               id="max-price" 
+                               name="max_price" 
+                               value="{{ max_price }}"
+                               readonly>
+                        <div class="price-dot"></div>
+                        <label for="max-price">MaxPrice</label>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <div id="price-slider" data-max-price="{{ max_price_filtered }}"></div>
+                </div>
+
+                <button type="submit" class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Apply Filter
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Product Grid -->
+    <section id="product-grid" class="products grid-view">
+        {% for product in products %}
+            <div class="product-card" data-aos="fade-up">
+                <div class="product">
+                    <a href="{% url 'store:product_detail' product.id %}">
+                        {% if product.primary_image %}
+                            <img class="lazy-image" 
+                                 src="{% static 'images/placeholder.png' %}" 
+                                 data-src="{{ product.primary_image.image.url }}" 
+                                 alt="{{ product.name }}">
+                        {% endif %}
+                    </a>
+                    <div class="product-details">
+                        <h3>{{ product.name }}
+                            {% if product.has_variants %}
+                                {% with variant_summary=product.get_variant_summary %}
+                                <span class="variants-badge">
+                                    {{ variant_summary.available_variants }} options
+                                </span>
+                                {% endwith %}
+                            {% endif %}
+                        </h3>
+                        <div class="price-info">
+                            {% if product.has_variants %}
+                                {% with variant_summary=product.get_variant_summary %}
+                                <span class="price-range">
+                                    ₹{{ variant_summary.price_range.min }} - ₹{{ variant_summary.price_range.max }}
+                                </span>
+                                {% endwith %}
+                            {% else %}
+                                <span class="price">₹{{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        {% if product.has_variants %}
+                            <a href="{% url 'store:product_detail' product.id %}" class="select-variant-btn">
+                                Select Options
+                            </a>
+                        {% else %}
+                            <div class="quantity-controls">
+                                <div class="quantity-selector" data-product-id="{{ product.id }}">
+                                    <button class="qty-btn decrease" type="button">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                           class="quantity-input" 
+                                           value="1" 
+                                           min="1"
+                                           readonly
+                                           data-product-id="{{ product.id }}"
+                                           data-max-stock="{{ product.stock }}"
+                                           data-base-price="{{ product.price }}">
+                                    <button class="qty-btn increase" type="button">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="stock-status {% if product.stock == 0 %}out-of-stock{% elif product.stock <= 5 %}low-stock{% else %}in-stock{% endif %}">
+                                    <span class="stock-indicator"></span>
+                                    <span class="stock-text">
+                                        {% if product.stock == 0 %}
+                                            Out of Stock
+                                        {% elif product.stock <= 5 %}
+                                            Only {{ product.stock }} left
+                                        {% else %}
+                                            In Stock
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <button class="add-to-cart-btn btn" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-price="{{ product.price }}"
+                                        {% if product.stock == 0 %}disabled{% endif %}>
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-products">
+                <i class="fas fa-box-open"></i>
+                <p>No products found in this category.</p>
+                <a href="{% url 'store:home' %}" class="btn">Browse All Products</a>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if products.has_previous %}
+        <a href="?page=1&sort={{ sort_option }}&min_price={{ min_price }}&max_price={{ max_price }}" class="first">First</a>
+        <a href="?page={{ products.previous_page_number }}" class="prev">Previous</a>
+    {% endif %}
+
+    <div class="page-numbers">
+        {% for num in products.paginator.page_range %}
+            {% if num == products.number %}
+                <span class="current-page">{{ num }}</span>
+            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                <a href="?page={{ num }}&sort={{ sort_option }}&min_price={{ min_price }}&max_price={{ max_price }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}" class="next">Next</a>
+        <a href="?page={{ products.paginator.num_pages }}" class="last">Last</a>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/category.js' %}"></script>
+<script src="{% static 'js/shop.js' %}"></script>
+<script src="{% static 'js/cart.js' %}"></script>
+<script src="{% static 'js/quantity-manager.js' %}"></script>
+<script src="{% static 'js/cart-manager.js' %}"></script>
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        offset: 100,
+        once: true
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add to cart functionality
+        function addToCart(productId, productName, price) {
+            const button = event.target.closest('.add-to-cart-btn');
+            
+            // Show loading state
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            fetch('/api/cart/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success state
+                    button.innerHTML = '<i class="fas fa-check"></i> Added';
+                    
+                    // Update cart count and total if available
+                    if (data.cart) {
+                        const cartCount = document.querySelector('.cart-count');
+                        if (cartCount) {
+                            cartCount.textContent = data.cart.total_items;
+                            cartCount.classList.add('bounce');
+                            setTimeout(() => cartCount.classList.remove('bounce'), 300);
+                        }
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to add item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+            })
+            .finally(() => {
+                // Reset button after delay
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize price slider
+        const priceSlider = document.getElementById('price-slider');
+        if (priceSlider) {
+            noUiSlider.create(priceSlider, {
+                start: [{{ min_price }}, {{ max_price }}],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': {{ max_price_filtered }}
+                }
+            });
+
+            const minPriceDisplay = document.getElementById('min-price-display');
+            const maxPriceDisplay = document.getElementById('max-price-display');
+            const minPriceInput = document.getElementById('min-price');
+            const maxPriceInput = document.getElementById('max-price');
+
+            priceSlider.noUiSlider.on('update', function(values, handle) {
+                const value = parseInt(values[handle]);
+                if (handle === 0) {
+                    minPriceDisplay.textContent = value;
+                    minPriceInput.value = value;
+                } else {
+                    maxPriceDisplay.textContent = value;
+                    maxPriceInput.value = value;
+                }
+            });
+        }
+    });
+</script>
+{% endblock extra_js %}

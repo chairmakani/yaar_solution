@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}shipping page{% endblock %}
+{% load static %}
+    {% block extra_css %}
+    {{ block.super }}
+
+    <style>
+       body {
+        margin: 0;
+        padding: 0;
+        line-height: 1.9;
+        }
+        .shipping-content { 
+            margin: 50px;
+            padding-left: 20px; /* Move content to the right */
+        }
+        .shipping-content h2, .shipping-content h3 {
+            text-align: left; margin-left: 30px; /* Align headings to the left */
+        }
+        .shipping-content p {
+            margin-left: 30px; /* Move paragraphs slightly to the right */
+        }
+    </style> 
+    
+    {% endblock %}
+    {% block content %}
+    {{ block.super }}
+     {% endblock %}
+
+{% block content2  %}
+<div class="shipping-content">
+    <h2>Shipping Policy</h2><br>
+    <h3><u>Which countries we ship to?</u></h3>
+        <p>We ship only within India</p>
+
+    <h3><u>Shipping Charges</u></h3>
+    <p>For the south Indian States (Tamil Nadu, Pondicherry, Andhra Pradesh, Telangana, Karnataka and Kerala)</p>
+    <p>Free shipping for all orders above Rs. 500</p>
+    <p>Rs. 50 Shipping for orders less than Rs.500</p>
+    <p>Shipping Charges for all other states</p>
+    <p>Free shipping for all orders above Rs. 500</p>
+    <p>Rs. 50 Shipping applied as shipping charge for orders less than Rs.500</p>
+    <p>We delivery to all major cities in India.</p>
+    <p>If your location is not serviced by our courier, we will contact you to cancel the order and full amount will be refunded to your account.</p>
+    <p>We can do international shipment for all products except liquid. For details please contact us @ 94886 74103</p>
+
+    <h3><u>Cash On Delivery</u></h3>
+    <p>For Cash on Delivery (COD) orders, Rs. 50 is applicable irrespective of the order value.</p>
+
+    <h3><u>Delivery Duration</u></h3>
+    <p>Tamilnadu : Delivered within 4 Working Days</p>
+    <p>Kerala, Karnataka, Telangana & AP : 4 – 7 Working Days</p>
+    <p>Other Locations : 7 – 14 Working Days</p>
+
+    <h3><u>Shipping Mode</u></h3>
+    <p>Standard surface shipping by Road.</p>
+
+    <h3>Shipping Policy</h3>
+    <p>All products are either delivered by Yaar.co.in staff or by reputed courier companies.</p>
+</div>
+{% endblock %}
+
+
+
