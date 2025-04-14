@@ -1,3 +1,4 @@
+import time
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Max, Q, Sum  # Add Sum
 from django.http import JsonResponse
@@ -20,7 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction, DatabaseError
+from django.db import IntegrityError, OperationalError, transaction, DatabaseError
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -95,22 +96,47 @@ def home(request):
 
 
 def product_search(request):
-    """View to handle product search."""
-    query = request.GET.get('query', '')
+    """View to handle both API and page search requests"""
+    query = request.GET.get('query', '') or request.GET.get('q', '')
     products = Product.objects.all()
     
     if query:
         products = products.filter(
             Q(name__icontains=query) |
-            Q(description__icontain=query)
+            Q(description__icontains=query)  # Fixed typo: icontain -> icontains
         )
 
-    context = {
-        'products': products,
-        'query': query,
+        # If it's an API request, return JSON
+        if request.path.startswith('/api/'):
+            products_data = [{
+                'id': product.id,
+                'name': product.name,
+                'description': product.description[:100] if product.description else '',
+                'price': str(product.price),
+                'image': product.primary_image.image.url if product.primary_image else None,
+                'url': reverse('store:product_detail', args=[product.id])
+            } for product in products[:5]]  # Limit to 5 results for API
+            
+            return JsonResponse({'products': products_data})
+
+        # For page requests, return template
+        context = {
+            'products': products,
+            'query': query,
+            'categories': Category.objects.all(),
+        }
+        return render(request, 'store/search_results.html', context)
+
+    # Return empty results for API requests
+    if request.path.startswith('/api/'):
+        return JsonResponse({'products': []})
+        
+    # Return search page for empty queries
+    return render(request, 'store/search_results.html', {
+        'products': [],
+        'query': '',
         'categories': Category.objects.all(),
-    }
-    return render(request, 'store/search_results.html', context)
+    })
 
 
 def product_detail(request, product_id):
@@ -192,25 +218,6 @@ def category_products(request, category_id):
     }
     
     return render(request, 'store/category_products.html', context)
-
-def search_products(request):
-    query = request.GET.get('query', '')
-    if query:
-        products = Product.objects.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query)
-        )[:5]
-        products_data = [{
-            'id': product.id,
-            'name': product.name,
-            'description': product.description,
-            'price': str(product.price),
-            'image': product.primary_image.image.url if product.primary_image else None,
-            'url': f'/product/{product.id}/'
-        } for product in products]
-        return JsonResponse({'products': products_data})
-    
-    return JsonResponse({'products': []})
 
 
 def ngo_list(request):
@@ -754,63 +761,71 @@ def login_view(request):
         password = request.POST.get('password')
 
         try:
+            # First try to get user by email
             user = User.objects.get(email=email)
             
-            # Check if user exists but is not active (pending verification)
-            if not user.is_active:
-                # Store user ID in session and redirect to verification
-                request.session['verification_user_id'] = user.id
+            # Use Django's built-in authenticate function
+            authenticated_user = authenticate(username=user.username, password=password)
+            
+            if authenticated_user is None:
+                logger.warning(f"Failed login attempt for email: {email}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid email or password'
+                })
+
+            # Check if user is active
+            if not authenticated_user.is_active:
+                request.session['verification_user_id'] = authenticated_user.id
                 return JsonResponse({
                     'status': 'verify_otp',
                     'message': 'Please complete your email verification'
                 })
 
-            if user.check_password(password):
-                if not user.profile.email_verified:
-                    # Send new OTP and require verification
-                    if send_otp_email(email):
-                        request.session['login_user_id'] = user.id
-                        return JsonResponse({
-                            'status': 'verify_otp',
-                            'message': 'Please verify your email'
-                        })
-                    else:
-                        raise ValidationError('Failed to send verification code')
-
-                login(request, user)
-                
-                # Check if user has any address
-                has_address = Address.objects.filter(user=user).exists()
-                if not has_address:
+            # Check email verification
+            if not authenticated_user.profile.email_verified:
+                if send_otp_email(email):
+                    request.session['login_user_id'] = authenticated_user.id
                     return JsonResponse({
-                        'status': 'success',
-                        'redirect_url': reverse('store:profile') + '?address_required=true',
-                        'message': f'Welcome back, {user.first_name}! Please add a delivery address.'
+                        'status': 'verify_otp',
+                        'message': 'Please verify your email'
                     })
-                
+                else:
+                    raise ValidationError('Failed to send verification code')
+
+            # Log the user in
+            login(request, authenticated_user)
+            
+            # Check if user has any address
+            has_address = Address.objects.filter(user=authenticated_user).exists()
+            
+            if not has_address:
                 return JsonResponse({
                     'status': 'success',
-                    'redirect_url': reverse('store:home'),
-                    'message': f'Welcome back, {user.first_name}!'
+                    'redirect_url': reverse('store:profile') + '?address_required=true',
+                    'message': f'Welcome back, {authenticated_user.first_name}! Please add a delivery address.'
                 })
-            else:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Invalid password'
-                })
+            
+            return JsonResponse({
+                'status': 'success',
+                'redirect_url': reverse('store:home'),
+                'message': f'Welcome back, {authenticated_user.first_name}!'
+            })
                 
         except User.DoesNotExist:
+            logger.warning(f"Login attempt with non-existent email: {email}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'No account found with this email'
             })
         except ValidationError as e:
+            logger.error(f"Validation error during login: {str(e)}")
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
             })
         except Exception as e:
-            logger.error(f"Login error: {str(e)}")
+            logger.error(f"Unexpected login error: {str(e)}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'An error occurred during login'
@@ -830,22 +845,39 @@ def profile_view(request):
     """Display user profile with comprehensive data"""
     user = request.user
     
-    # Get recent orders
+    # Get recent orders with prefetch for efficiency
     recent_orders = Order.objects.filter(user=user).order_by('-created_at')[:5]
     
     # Get addresses
     addresses = Address.objects.filter(user=user)
     
-    # Get wishlist items
+    # Get wishlist items with proper image handling
     wishlist_items = WishlistItem.objects.filter(user=user).select_related('product')[:6]
+    
+    # Format wishlist items to handle missing images
+    formatted_wishlist = []
+    for item in wishlist_items:
+        image_url = None
+        if item.product.primary_image and item.product.primary_image.image:
+            try:
+                image_url = item.product.primary_image.image.url
+            except ValueError:
+                image_url = None
+                
+        formatted_wishlist.append({
+            'id': item.id,
+            'product': item.product,
+            'image_url': image_url,
+            'created_at': item.created_at
+        })
     
     # Get recent activities
     recent_activities = UserActivity.objects.filter(user=user).order_by('-timestamp')[:5]
     
-    # Calculate order statistics - Using total_amount instead of total
+    # Calculate order statistics
     total_orders = Order.objects.filter(user=user).count()
     total_spent = Order.objects.filter(user=user).aggregate(
-        total=Sum('total_amount')  # Changed from 'total' to 'total_amount'
+        total=Sum('total_amount')
     )['total'] or 0
     active_orders = Order.objects.filter(
         user=user,
@@ -856,7 +888,7 @@ def profile_view(request):
         'user': user,
         'recent_orders': recent_orders,
         'addresses': addresses,
-        'wishlist_items': wishlist_items,
+        'wishlist_items': formatted_wishlist,  # Use formatted wishlist
         'recent_activities': recent_activities,
         'total_orders': total_orders,
         'total_spent': total_spent,
@@ -1065,71 +1097,84 @@ def verify_account(request):
 @csrf_protect
 def register_view(request):
     if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                # Get form data
-                phone = request.POST.get('phone')
-                email = request.POST.get('email')
-                name = request.POST.get('name')
-                password = request.POST.get('password')
-                
-                # Check if user already exists
-                if User.objects.filter(email=email).exists():
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'Email already registered'
-                    })
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                with transaction.atomic():
+                    # Get form data
+                    phone = request.POST.get('phone')
+                    email = request.POST.get('email')
+                    name = request.POST.get('name')
+                    password = request.POST.get('password')
+                    
+                    # Check if user already exists
+                    if User.objects.filter(email=email).exists():
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'Email already registered'
+                        })
 
-                if User.objects.filter(profile__phone_number=phone).exists():
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'Phone number already registered'
-                    })
+                    if User.objects.filter(profile__phone_number=phone).exists():
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'Phone number already registered'
+                        })
 
-                # Split name into first_name and last_name
-                full_name = request.POST.get('name', '').strip()
-                names = full_name.split(' ', 1)
-                first_name = names[0]
-                last_name = names[1] if len(names) > 1 else ''
-                
-                # Create user with is_active=False
-                user = User.objects.create_user(
-                    username=email,
-                    email=email,
-                    password=password,
-                    first_name=first_name,
-                    last_name=last_name,  # Add last name
-                    is_active=False
-                )
-                
-                user.profile.phone_number = phone
-                user.profile.save()
-                
-                # Store user_id in session
-                request.session['registration_user_id'] = user.id
-                
-                # Send OTP
-                if send_otp_email(email):
-                    return JsonResponse({
-                        'status': 'success',
-                        'redirect_url': reverse('store:verify_otp')
-                    })
-                else:
-                    # Rollback will happen automatically due to transaction.atomic()
-                    raise ValidationError('Failed to send OTP')
+                    # Split name into first_name and last_name
+                    full_name = request.POST.get('name', '').strip()
+                    names = full_name.split(' ', 1)
+                    first_name = names[0]
+                    last_name = names[1] if len(names) > 1 else ''
+                    
+                    # Create user with is_active=False
+                    user = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name,  # Add last name
+                        is_active=False
+                    )
+                    
+                    user.profile.phone_number = phone
+                    user.profile.save()
+                    
+                    # Store user_id in session
+                    request.session['registration_user_id'] = user.id
+                    
+                    # Send OTP
+                    if send_otp_email(email):
+                        return JsonResponse({
+                            'status': 'success',
+                            'redirect_url': reverse('store:verify_otp')
+                        })
+                    else:
+                        # Rollback will happen automatically due to transaction.atomic()
+                        raise ValidationError('Failed to send OTP')
 
-        except ValidationError as ve:
-            logger.error(f"Validation error during registration: {str(ve)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': str(ve)
-            }, status=400)
-        except Exception as e:
-            logger.error(f"Unexpected error during registration: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'An unexpected error occurred'
-            }, status=500)
+            except OperationalError as e:
+                if 'database is locked' in str(e) and retry_count < max_retries - 1:
+                    retry_count += 1
+                    time.sleep(retry_count)
+                    continue
+                raise
+
+            except ValidationError as ve:
+                logger.error(f"Validation error during registration: {str(ve)}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': str(ve)
+                }, status=400)
+            except Exception as e:
+                logger.error(f"Unexpected error during registration: {str(e)}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'An unexpected error occurred'
+                }, status=500)
+            
+            break  # If we get here, the transaction succeeded
     
     return render(request, 'store/register.html')
 
@@ -1176,7 +1221,6 @@ def verify_otp_view(request):
                     'message': 'Invalid or expired OTP'
                 })
 
-        # For GET requests, render the OTP verification form
         return render(request, 'store/verify_otp.html', {
             'email': user.email,
             'resend_available': True
@@ -1389,12 +1433,19 @@ class ProductDetailView(DetailView):
 def check_stock(request):
     """API endpoint to check stock levels for products"""
     try:
-        # Ensure request has CSRF token
+        # Get CSRF token from either header or request
         csrf_token = request.headers.get('X-CSRFToken') or request.COOKIES.get('csrftoken')
+        
+        # If no CSRF token found in standard places, check other common header variations
         if not csrf_token:
+            csrf_token = (request.headers.get('X-CSRF-Token') or 
+                         request.headers.get('CSRF-Token') or 
+                         request.headers.get('Csrf-Token'))
+        
+        if not csrf_token and not request.is_ajax():
             return JsonResponse({
                 'success': False,
-                'message': 'CSRF token missing'
+                'message': 'CSRF verification failed. Please reload the page.'
             }, status=403)
 
         data = json.loads(request.body)
@@ -1402,29 +1453,36 @@ def check_stock(request):
 
         stock_data = []
         for product_id in product_ids:
-            product = get_object_or_404(Product, id=product_id)
-            
-            # Handle variants
-            if (product.has_variants):
-                variants = product.variants.filter(is_active=True)
-                for variant in variants:
+            try:
+                product = Product.objects.get(id=product_id)
+                if product.has_variants:
+                    variants = product.variants.filter(is_active=True)
+                    for variant in variants:
+                        stock_data.append({
+                            'product_id': product_id,
+                            'variant_id': variant.id,
+                            'stock': variant.stock,
+                            'status': get_stock_status(variant.stock, product.stock_threshold)
+                        })
+                else:
                     stock_data.append({
                         'product_id': product_id,
-                        'variant_id': variant.id,
-                        'stock': variant.stock,
-                        'status': get_stock_status(variant.stock, product.stock_threshold)
+                        'stock': product.stock,
+                        'status': get_stock_status(product.stock, product.stock_threshold)
                     })
-            else:
-                stock_data.append({
-                    'product_id': product_id,
-                    'stock': product.stock,
-                    'status': get_stock_status(product.stock, product.stock_threshold)
-                })
+            except Product.DoesNotExist:
+                continue
 
         return JsonResponse({
             'success': True,
             'stock_data': stock_data
         })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON data'
+        }, status=400)
     except Exception as e:
         logger.error(f"Stock check error: {str(e)}")
         return JsonResponse({
@@ -1449,16 +1507,63 @@ def main(request):
     return render(request, 'store/main.html')
 
 def privacy_policy(request):
-    return render(request, 'store/profile/privacy_policy.html')
+    return render(request, 'store/policy/privacy_policy.html')
 
 def shipping_policy(request):
-    return render(request, 'store/profile/shipping_policy.html')
+    return render(request, 'store/policy/shipping_policy.html')
 
 def terms_policy(request):
-    return render(request, 'store/profile/terms_policy.html')
+    return render(request, 'store/policy/terms_policy.html')
 
 def return_and_cancellation_policy(request):
-    return render(request, 'store/profile/return and cancellation_policy.html')
+    return render(request, 'store/policy/return and cancellation_policy.html')
 
 def contact_view(request):
     return render(request, 'store/ourself/contact.html')
+
+@login_required
+@require_POST
+def add_to_wishlist(request):
+    """Add a product to user's wishlist"""
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        variant_id = data.get('variant_id')
+        
+        # Verify the product exists
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if item already in wishlist
+        wishlist_item, created = WishlistItem.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
+
+        if created:
+            # Record activity
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='wishlist',
+                description=f'Added {product.name} to wishlist'
+            )
+            message = 'Product added to wishlist'
+        else:
+            message = 'Product already in wishlist'
+
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'in_wishlist': True
+        })
+
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request data'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Wishlist error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Failed to update wishlist'
+        }, status=500)

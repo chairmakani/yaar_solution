@@ -140,8 +140,15 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['order_number', 'user', 'total_amount', 'status', 'created_at']
     list_filter = ['status', 'payment_status', 'created_at']
     search_fields = ['order_number', 'user__email']
-    readonly_fields = ['order_number', 'created_at', 'updated_at']
+    readonly_fields = ['order_number', 'created_at', 'updated_at', 'total_amount']
     
+    def get_readonly_fields(self, request, obj=None):
+        # Make total_amount read-only as it's calculated
+        fields = list(self.readonly_fields)
+        if obj:  # Only make these read-only for existing objects
+            fields.extend(['items_total', 'shipping_fee', 'tax_amount'])
+        return fields
+
     def total(self, obj):
         return obj.total_amount
     total.short_description = 'Total Amount'

@@ -117,6 +117,9 @@ Home
                             <img class="lazy-image" src="{% static 'images/placeholder.png' %}" 
                                  data-src="{{ product.primary_image.image.url }}" 
                                  alt="{{ product.name }}">
+                        {% else %}
+                            <img class="lazy-image" src="{% static 'images/no-image.jpg' %}" 
+                                 alt="{{ product.name }}">
                         {% endif %}
                     </a>
                     <div class="product-details">

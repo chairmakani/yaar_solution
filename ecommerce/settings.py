@@ -132,7 +132,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files configuration
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'store', 'static', 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Add messages framework

@@ -24,6 +24,9 @@
     <div class="content-loader">
         <!-- Add this right after <body> tag -->
         <div id="notification-container" class="notification-container"></div>
+        <form id="csrf-form" style="display:none">
+            {% csrf_token %}
+        </form>
         
         {% block extra_css %}
         <link rel="stylesheet" href="{% static 'css/cart-animations.css' %}">
@@ -76,7 +79,7 @@
                                 <div class="menu-divider"></div>
                                 <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: inline;">
                                     {% csrf_token %}
-                                    <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="text-danger">
+                                    <a href="#" onclick="showLogoutConfirm(event)" class="text-danger">
                                         <i class="fas fa-sign-out-alt"></i> Logout
                                     </a>
                                 </form>
@@ -199,7 +202,7 @@
                             <li>
                                 <form id="mobile-logout-form" action="{% url 'logout' %}" method="POST" style="display: inline;">
                                     {% csrf_token %}
-                                    <a href="#" onclick="document.getElementById('mobile-logout-form').submit(); return false;" class="text-danger">
+                                    <a href="#" onclick="showLogoutConfirm(event)" class="text-danger">
                                         <i class="fas fa-sign-out-alt"></i> Logout
                                     </a>
                                 </form>
@@ -276,6 +279,7 @@
         <script src="{% static 'js/quantity-manager.js' %}"></script>
         <script src="{% static 'js/cart-animations.js' %}"></script>
         <script src="{% static 'js/loader.js' %}"></script>
+        <script src="{% static 'js/csrf.js' %}"></script>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to update cart UI
@@ -395,8 +399,114 @@
         document.addEventListener('cartUpdated', function(e) {
             updateCartUI(e.detail);
         });
+
+        function showLogoutConfirm(event) {
+            event.preventDefault();
+            document.getElementById('logout-modal').style.display = 'flex';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logout-modal').style.display = 'none';
+        }
+
+        function submitLogout() {
+            const form = document.getElementById('logout-form');
+            if (form) {
+                // Get CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Submit form with CSRF token
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    credentials: 'same-origin'
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.href = "{% url 'store:login' %}";
+                    }
+                });
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('logout-modal');
+            if (event.target == modal) {
+                closeLogoutModal();
+            }
+        }
+
+        // Initialize CSRF protection
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCSRFToken();
+        });
         </script>
-        {% endblock extra_js %}
+    {{ block.super }}
+    {% endblock %}
     </div>
+
+    <!-- Add this inside the account-links div where the logout form is -->
+    <div id="logout-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                <button class="btn-confirm" onclick="submitLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-cancel, .btn-confirm {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-cancel {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-confirm {
+        background-color: #dc3545;
+        color: white;
+    }
+    </style>
 </body>
 </html>

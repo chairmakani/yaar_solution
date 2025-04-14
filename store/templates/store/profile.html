@@ -162,19 +162,27 @@
             <h3 class="section-title">
                 <i class="fas fa-heart"></i> My Wishlist
             </h3>
-            <div class="wishlist-grid">
+            {% if wishlist_items %}
+            <div class="wishlist-items">
                 {% for item in wishlist_items %}
-                <div class="product-card mini">
-                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-                    <div class="product-info">
-                        <div class="product-name">{{ item.product.name }}</div>
-                        <div class="product-price">₹{{ item.product.price }}</div>
+                <div class="wishlist-item">
+                    {% if item.image_url %}
+            
+                        <img src="{{ item.image_url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="No image available">
+                    {% endif %}
+              
+                    <div class="wishlist-item-details">
+                        <h4>{{ item.product.name }}</h4>
+                        <p>₹{{ item.product.price }}</p>
                     </div>
                 </div>
-                {% empty %}
-                <p>Your wishlist is empty</p>
                 {% endfor %}
             </div>
+            {% else %}
+            <p>No items in wishlist</p>
+            {% endif %}
         </div>
 
         <!-- Activity Timeline -->

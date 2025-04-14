@@ -1,9 +1,15 @@
 {# filepath: e:\work env\ecommerce\store\templates\store\login.html #}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Login - YAAR SOLUTION{% endblock %}
 
+{% block content %}
+    {{ block.super }}
+{% endblock %}
+
 {% block extra_css %}
+{{ block.super }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}
@@ -62,6 +68,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('login-form');
@@ -118,21 +125,26 @@
                     body: formData,
                     headers: {
                         'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    credentials: 'same-origin' // Include cookies in the request
+                    credentials: 'same-origin'
                 });
     
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    window.location.href = data.redirect_url;
+                    showNotification(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
                 } else if (data.status === 'verify_otp') {
                     otpModal.classList.add('show');
                 } else {
                     showNotification(data.message, 'error');
                 }
             } catch (error) {
-                showNotification('An error occurred', 'error');
+                console.error('Login error:', error);
+                showNotification('An error occurred during login', 'error');
             }
         });
     

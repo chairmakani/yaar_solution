@@ -356,6 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (query.trim()) {
             try {
+                // Update the URL to match the correct endpoint from urls.py
                 const response = await fetch(`/api/search-products/?query=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
@@ -367,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Create the HTML for the suggestion
                         suggestionItem.innerHTML = `
                             <div class="suggestion-img">
-                                <img src="${product.image || '/static/images/default-product.png'}" alt="${product.name}">
+                                <img src="${product.image || '/static/images/no-image.jpg'}" alt="${product.name}">
                             </div>
                             <div class="suggestion-details">
                                 <h4>${product.name}</h4>

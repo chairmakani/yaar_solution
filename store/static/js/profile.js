@@ -108,31 +108,49 @@ const getAddressFormTemplate = (required = false) => `
         <div class="form-row">
             <div class="form-group">
                 <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required>
+                <div class="input-wrapper">
+                    <input type="text" id="name" name="name" required>
+                    <i class="fas fa-times clear-input" data-target="name"></i>
+                </div>
             </div>
             <div class="form-group">
                 <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" placeholder="10-digit number" required>
+                <div class="input-wrapper">
+                    <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" placeholder="10-digit number" required>
+                    <i class="fas fa-times clear-input" data-target="phone"></i>
+                </div>
             </div>
         </div>
         <div class="form-group">
             <label for="street">Street Address</label>
-            <input type="text" id="street" name="street" required>
+            <div class="input-wrapper">
+                <input type="text" id="street" name="street" required>
+                <i class="fas fa-times clear-input" data-target="street"></i>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label for="city">City</label>
-                <input type="text" id="city" name="city" required>
+                <div class="input-wrapper">
+                    <input type="text" id="city" name="city" required>
+                    <i class="fas fa-times clear-input" data-target="city"></i>
+                </div>
             </div>
             <div class="form-group">
                 <label for="state">State</label>
-                <input type="text" id="state" name="state" required>
+                <div class="input-wrapper">
+                    <input type="text" id="state" name="state" required>
+                    <i class="fas fa-times clear-input" data-target="state"></i>
+                </div>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label for="pincode">PIN Code</label>
-                <input type="text" id="pincode" name="pincode" pattern="[0-9]{6}" maxlength="6" required>
+                <div class="input-wrapper">
+                    <input type="text" id="pincode" name="pincode" pattern="[0-9]{6}" maxlength="6" required>
+                    <i class="fas fa-times clear-input" data-target="pincode"></i>
+                </div>
             </div>
             <div class="form-group">
                 <label for="type">Address Type</label>
@@ -360,6 +378,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
     
+    // Add handler for clear input icons
+    document.body.addEventListener('click', function(e) {
+        if (e.target.classList.contains('clear-input')) {
+            const targetId = e.target.dataset.target;
+            const input = document.getElementById(targetId);
+            if (input) {
+                input.value = '';
+                input.focus();
+                // Show/hide clear icon
+                e.target.style.opacity = '0';
+            }
+        }
+    });
+
+    // Add input event listeners for showing/hiding clear icons
+    document.body.addEventListener('input', function(e) {
+        const wrapper = e.target.closest('.input-wrapper');
+        if (wrapper) {
+            const clearIcon = wrapper.querySelector('.clear-input');
+            if (clearIcon) {
+                clearIcon.style.opacity = e.target.value ? '1' : '0';
+            }
+        }
+    });
+
     // Add other initialization code here
 });
 

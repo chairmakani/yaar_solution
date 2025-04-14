@@ -1,214 +1,116 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link rel="stylesheet" href="{% static 'css/register-style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
-<body>
-    <div class="register-container">
-        <!-- Cancel Button -->
-        <button class="cancel-btn" onclick="location.href='{% url 'store:home' %}'">&times;</button>
 
-        <!-- Register Header -->
-        <h2 class="register-title">Register</h2>
+{% block title %}Register | Yaar Solution{% endblock %}
 
-        <!-- Error Messages Container -->
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} register-alert">
-                    {{ message }}
-                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+{% block content %}
+    {{ block.super }}
+{% endblock %}
 
-        <!-- Alert Container -->
-        <div class="alert-container"></div>
-
-        <!-- Registration Form -->
-        <form id="register-form" method="POST" action="{% url 'store:register' %}">
-            {% csrf_token %}
-            <!-- Phone Input -->
-            <label for="register-phone" class="input-label">Phone Number</label>
-            <div class="phone-input">
-                <span class="country-code"><i class="fa-solid fa-flag-india"></i> +91</span>
-                <input type="text" id="register-phone" name="phone" placeholder="81234 56789" required>
+{% block content2 %}
+<div class="register-container">
+    <div class="register-wrapper">
+        <div class="register-card">
+            <div class="register-header">
+                <h1>Create Account</h1>
+                <p>Join us to start shopping</p>
             </div>
 
-            <!-- Email Input -->
-            <label for="register-email" class="input-label">Email Address</label>
-            <input type="email" id="register-email" name="email" placeholder="Email Address">
-
-            <!-- Name Input -->
-            <label for="register-name" class="input-label">First Name</label>
-            <input type="text" id="register-name" name="name" placeholder="First Name" required>
-
-            <!-- Password Input -->
-            <label for="register-password" class="input-label">Password</label>
-            <input type="password" id="register-password" name="password" placeholder="Password" required>
-
-            <!-- Confirm Password Input -->
-            <label for="confirm-password" class="input-label">Confirm Password</label>
-            <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm Password" required>
-
-            <!-- Submit Button -->
-            <button type="submit" class="continue-btn">Continue</button>
-        </form>
-
-        <!-- Login Link -->
-        <div class="login-link">
-            Already a member? <a href="{% url 'store:login' %}"><b>Login Now</b></a>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.getElementById("register-form");
-            const submitBtn = form.querySelector('.continue-btn');
-            
-            // Disable submit button by default
-            submitBtn.disabled = true;
-            submitBtn.classList.add('disabled');
-
-            // Input fields
-            const inputs = {
-                phone: document.getElementById("register-phone"),
-                email: document.getElementById("register-email"),
-                name: document.getElementById("register-name"),
-                password: document.getElementById("register-password"),
-                confirmPassword: document.getElementById("confirm-password")
-            };
-
-            // Add input event listeners to all fields
-            Object.values(inputs).forEach(input => {
-                input.addEventListener('input', validateForm);
-            });
-
-            function validateForm() {
-                const phoneValid = /^[0-9]{10}$/.test(inputs.phone.value.trim());
-                const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email.value);
-                const nameValid = inputs.name.value.trim().length >= 2;
-                const passwordValid = inputs.password.value.length >= 8;
-                const passwordsMatch = inputs.password.value === inputs.confirmPassword.value;
-
-                // Enable/disable submit button based on all validations
-                const isValid = phoneValid && emailValid && nameValid && passwordValid && passwordsMatch;
-                submitBtn.disabled = !isValid;
-                submitBtn.classList.toggle('disabled', !isValid);
-
-                return isValid;
-            }
-
-            form.addEventListener("submit", async function (event) {
-                event.preventDefault();
-
-                if (!validateForm()) {
-                    showMessage('Please fill all fields correctly.', 'error');
-                    return;
-                }
-
-                try {
-                    const formData = new FormData(this);
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-
-                    const response = await fetch(this.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        sessionStorage.setItem('registrationEmail', formData.get('email'));
-                        sessionStorage.setItem('registrationPhone', formData.get('phone'));
-                        
-                        showMessage('Registration successful! Redirecting to verification...', 'success');
-                        
-                        setTimeout(() => {
-                            window.location.href = data.redirect_url;
-                        }, 1500);
-                    } else {
-                        showMessage(data.message, 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Continue';
-                    }
-                } catch (error) {
-                    console.error('Registration error:', error);
-                    showMessage('An error occurred. Please try again.', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Continue';
-                }
-            });
-        });
-
-        function showMessage(message, type = 'success') {
-            const alertContainer = document.querySelector('.alert-container');
-            const icons = {
-                success: '<i class="fas fa-check-circle"></i>',
-                error: '<i class="fas fa-exclamation-circle"></i>',
-                info: '<i class="fas fa-info-circle"></i>'
-            };
-            const titles = {
-                success: 'Success',
-                error: 'Error',
-                info: 'Information'
-            };
-            
-            const alertHtml = `
-                <div class="alert alert-${type}">
-                    <div class="alert-icon">
-                        ${icons[type]}
+            <form id="register-form" method="POST" action="{% url 'store:register' %}" class="register-form" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group-wrapper">
+                    <div class="form-group">
+                        <label for="name">Full Name<span class="required">*</span></label>
+                        <input type="text" id="name" name="name" required 
+                               minlength="3" maxlength="50"
+                               pattern="[A-Za-z\s]+"
+                               placeholder="Enter your full name"
+                               autocomplete="name">
+                        <span class="error-message"></span>
                     </div>
-                    <div class="alert-content">
-                        <div class="alert-title">${titles[type]}</div>
-                        <div class="alert-message">${message}</div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address<span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="Enter your email"
+                               autocomplete="email">
+                        <span class="error-message"></span>
                     </div>
-                    <button class="alert-close" onclick="this.closest('.alert').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div class="alert-progress">
-                        <div class="alert-progress-bar" style="color: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'}"></div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number<span class="required">*</span></label>
+                        <div class="phone-input-wrapper">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="phone" name="phone" required 
+                                   pattern="[0-9]{10}"
+                                   placeholder="Enter your phone number"
+                                   maxlength="10"
+                                   autocomplete="tel">
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password<span class="required">*</span></label>
+                        <div class="password-input">
+                            <input type="password" id="password" name="password" required 
+                                   minlength="8"
+                                   placeholder="Create a password">
+                            <i class="fas fa-eye toggle-password"></i>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-meter"></div>
+                            <span class="strength-text"></span>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group terms-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="terms" name="terms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="{% url 'store:terms_policy' %}" target="_blank">Terms</a> and 
+                            <a href="{% url 'store:privacy_policy' %}" target="_blank">Privacy Policy</a>
+                        </label>
+                        <span class="error-message"></span>
                     </div>
                 </div>
-            `;
-            
-            const alertElement = document.createRange().createContextualFragment(alertHtml).firstElementChild;
-            alertContainer.appendChild(alertElement);
-            
-            // Remove alert after 5 seconds
-            setTimeout(() => {
-                alertElement.style.animation = 'slideOut 0.5s forwards';
-                setTimeout(() => alertElement.remove(), 500);
-            }, 5000);
-        }
 
-        function clearErrors() {
-            document.querySelectorAll('.error-message').forEach(el => el.remove());
-            document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
-        }
-    </script>
+                <button type="submit" class="register-button" id="register-submit">
+                    <span class="button-text">Create Account</span>
+                    <span class="loading-text" style="display: none;">Creating Account...</span>
+                </button>
+            </form>
 
-    <style>
-        .continue-btn.disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+            <div class="register-footer">
+                <p>Already have an account? <a href="{% url 'store:login' %}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
 
-        .continue-btn.disabled:hover {
-            background-color: #cccccc;
-            transform: none;
-        }
-    </style>
-</body>
-</html>
+<!-- Password Requirements Modal -->
+<div id="password-requirements" class="modal">
+    <div class="modal-content">
+        <h3>Password Requirements</h3>
+        <ul class="requirements-list">
+            <li data-requirement="length">At least 8 characters</li>
+            <li data-requirement="uppercase">One uppercase letter</li>
+            <li data-requirement="lowercase">One lowercase letter</li>
+            <li data-requirement="number">One number</li>
+            <li data-requirement="special">One special character</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="{% static 'js/register.js' %}"></script>
+{% endblock %}

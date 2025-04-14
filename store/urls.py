@@ -11,7 +11,7 @@ urlpatterns = [
     path('search/', views.product_search, name='product_search'),  # Change name to product_search
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('category/<int:category_id>/', views.category_products, name='category_products'),
-    path('api/search-products/', views.search_products, name='api_search_products'),
+    path('api/search-products/', views.product_search, name='api_search_products'),  # Update this line
     path('ngo/<int:ngo_id>/', views.ngo_detail, name='ngo_detail'),  # Change from ngos/ to ngo/ for consistency
     path('ngos/', views.ngo_list, name='ngo_list'),  # Add this line for NGO listing
     path('cart/', views.cart_view, name='cart'),
@@ -33,6 +33,7 @@ urlpatterns = [
     path('profile/settings/', views.settings_view, name='settings'),  # Add this line
     path('profile/address/add/', views.add_address, name='add_address'),
     path('profile/wishlist/toggle/', views.toggle_wishlist, name='toggle_wishlist'),
+    path('wishlist/add/', views.add_to_wishlist, name='add_to_wishlist'),  # Add this line
     path('profile/order/<int:order_id>/', views.get_order_details, name='order_details'),
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),  # Fix view name
     path('resend-codes/', views.resend_verification_codes, name='resend_codes'),
@@ -47,5 +48,3 @@ urlpatterns = [
     path('return_and_cancellation_policy/', views.return_and_cancellation_policy, name='return_and_cancellation_policy'),
     path('contact/', views.contact_view, name='contact'),
 ]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
