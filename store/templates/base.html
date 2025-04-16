@@ -176,6 +176,7 @@
             <!-- Sidebar Tabs -->
             <div class="tabs">
                 <button class="tab-button active" id="categories-tab">Categories</button>
+                <button class="tab-button" id="ngo-tab">NGOs</button>
                 <button class="tab-button" id="profile-tab">Profile</button>
             </div>
             <!-- Sidebar Content -->
@@ -192,6 +193,28 @@
                         {% endfor %}
                     </ul>
                
+                </div>
+                <div class="tab-content" id="ngo-content">
+                    <ul class="sidebar-ngo-list">
+                        {% for location, ngos in ngo_menu.items %}
+                        <li class="sidebar-ngo-location">
+                            <a href="#" class="location-toggle">
+                                {{ location }}
+                                <span class="toggle-icon">&#x25BC;</span>
+                            </a>
+                            <ul class="sidebar-ngo-items">
+                                {% for ngo in ngos %}
+                                <li>
+                                    <a href="{{ ngo.get_absolute_url }}">
+                                        {{ ngo.shg_name }}
+                                        <small>({{ ngo.contact_person }})</small>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 <div class="tab-content" id="profile-content">
                     <ul>
@@ -443,10 +466,78 @@
         document.addEventListener('DOMContentLoaded', function() {
             setupCSRFToken();
         });
-        </script>
+
+        // Add NGO tab functionality
+        const ngoTab = document.getElementById('ngo-tab');
+        const ngoContent = document.getElementById('ngo-content');
+        
+        // Add click handler for NGO locations
+        document.querySelectorAll('.location-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parent = this.parentElement;
+                parent.classList.toggle('active');
+            });
+        });
+
+        // Update tab switching logic
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                const contentId = this.id.replace('-tab', '-content');
+                document.getElementById(contentId).classList.add('active');
+            });
+        });
+
+        // Enhanced NGO location toggle functionality
+        document.querySelectorAll('.location-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parent = this.parentElement;
+                const items = parent.querySelectorAll('.sidebar-ngo-items li');
+                
+                // Set animation delay for each item
+                items.forEach((item, index) => {
+                    item.style.setProperty('--item-index', index);
+                });
+                
+                // Toggle active state with slight delay for smooth animation
+                if (!parent.classList.contains('active')) {
+                    parent.classList.add('active');
+                    items.forEach(item => item.style.display = 'block');
+                } else {
+                    parent.classList.remove('active');
+                    setTimeout(() => {
+                        if (!parent.classList.contains('active')) {
+                            items.forEach(item => item.style.display = 'none');
+                        }
+                    }, 400); // Match the transition duration
+                }
+                
+                // Close other open locations
+                document.querySelectorAll('.sidebar-ngo-location.active').forEach(loc => {
+                    if (loc !== parent) {
+                        loc.classList.remove('active');
+                        setTimeout(() => {
+                            if (!loc.classList.contains('active')) {
+                                loc.querySelectorAll('.sidebar-ngo-items li').forEach(item => {
+                                    item.style.display = 'none';
+                                });
+                            }
+                        }, 400);
+                    }
+                });
+            });
+        });
+        
     {{ block.super }}
     {% endblock %}
-    </div>
+    </script>
 
     <!-- Add this inside the account-links div where the logout form is -->
     <div id="logout-modal" class="modal">
@@ -506,6 +597,54 @@
     .btn-confirm {
         background-color: #dc3545;
         color: white;
+    }
+
+    /* Add these styles to your existing CSS */
+    .sidebar-ngo-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-ngo-location {
+        border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-ngo-location > a {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 15px;
+        color: #333;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .sidebar-ngo-items {
+        display: none;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        background: #f8f9fa;
+    }
+
+    .sidebar-ngo-items li a {
+        padding: 8px 15px 8px 30px;
+        display: block;
+        color: #666;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+
+    .sidebar-ngo-location.active .sidebar-ngo-items {
+        display: block;
+    }
+
+    .sidebar-ngo-location.active .toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s ease;
     }
     </style>
 </body>

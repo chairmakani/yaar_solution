@@ -27,7 +27,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-#CSRF_TRUSTED_ORIGINS = ['https://yaarsolution.com']
+# CSRF_TRUSTED_ORIGINS = ['https://yaarsolution.com']
 
 # Application definition
 INSTALLED_APPS = [

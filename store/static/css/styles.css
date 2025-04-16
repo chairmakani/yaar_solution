@@ -212,14 +212,45 @@ body {
 
 /* Responsive logo adjustments */
 @media (max-width: 768px) {
-    .logo-text {
-        font-size: 1.5rem;
+    .logo-main {
+        font-size: 20px; /* Reduced from 24px */
+        letter-spacing: 1px; /* Reduced from 1.5px */
     }
     
-    .logo-tagline {
-        font-size: 0.7rem;
+    .logo-subtext {
+        font-size: 10px; /* Reduced from 12px */
+        letter-spacing: 2px; /* Reduced from 3px */
+        margin-top: 2px; /* Reduced from 4px */
+    }
+    
+    .logo {
+        padding: 3px 10px; /* Reduced padding */
+        margin-right: 15px; /* Reduced margin */
+    }
+
+    .logo-subtext::before,
+    .logo-subtext::after {
+        display: none; /* Hide decorative dots on mobile */
     }
 }
+
+@media (max-width: 480px) {
+    .logo-main {
+        font-size: 18px;
+    }
+    
+    .logo-subtext {
+        display: flex; /* Hide subtext on very small screens */
+        font-size: 8px; /* Reduced from 10px */
+    
+    }
+    
+    .logo {
+        padding: 2px 8px;
+        margin-right: 10px;
+    }
+}
+
 
 .nav-icons {
     display: none; /* Hidden by default for larger screens */
@@ -2168,4 +2199,84 @@ body {
         width: 20px;
         height: 20px;
     }
+}
+
+/* Enhanced NGO Sidebar Styles */
+.sidebar-ngo-location {
+    background: rgba(255, 255, 255, 0.05);
+    margin: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-ngo-location > a {
+    padding: 15px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.sidebar-ngo-location > a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.toggle-icon {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.8;
+}
+
+.sidebar-ngo-location.active .toggle-icon {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.sidebar-ngo-items {
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-ngo-location.active .sidebar-ngo-items {
+    max-height: 500px;
+}
+
+.sidebar-ngo-items li {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: calc(var(--item-index) * 50ms);
+}
+
+.sidebar-ngo-location.active .sidebar-ngo-items li {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.sidebar-ngo-items li a {
+    padding: 12px 15px 12px 30px;
+    color: rgba(255, 255, 255, 0.9);
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.sidebar-ngo-items li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 35px;
+}
+
+.sidebar-ngo-items li a small {
+    display: block;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85em;
+    margin-top: 4px;
+    transition: color 0.3s ease;
+}
+
+.sidebar-ngo-items li a:hover small {
+    color: rgba(255, 255, 255, 0.8);
 }

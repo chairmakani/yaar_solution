@@ -113,49 +113,64 @@ Home
             <div class="product-card">
                 <div class="product" data-product-id="{{ product.id }}">
                     <a href="{% url 'store:product_detail' product.id %}">
-                        {% if product.primary_image %}
+                        {% if product.primary_image and product.primary_image.image %}
                             <img class="lazy-image" src="{% static 'images/placeholder.png' %}" 
                                  data-src="{{ product.primary_image.image.url }}" 
                                  alt="{{ product.name }}">
                         {% else %}
                             <img class="lazy-image" src="{% static 'images/no-image.jpg' %}" 
-                                 alt="{{ product.name }}">
+                                 alt="No image available">
                         {% endif %}
                     </a>
                     <div class="product-details">
-                        <h3>{{ product.name }}
-                            {% if product.has_variants %}
-                                {% with variant_summary=product.get_variant_summary %}
+                        <h3>{{ product.name }}</h3>
+                        <!-- Description for list view only -->
+                        {% if not product.has_variants %}
+                            <p class="product-description">
+                                {{ product.description|truncatechars:150 }}
+                                {% if product.description|length > 150 %}
+                                    <a href="{% url 'store:product_detail' product.id %}" class="read-more">Read more</a>
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p class="product-description">
+                                {{ product.description|truncatechars:150 }}
+                                {% if product.description|length > 150 %}
+                                    <a href="{% url 'store:product_detail' product.id %}" class="read-more">Read more</a>
+                                {% endif %}
                                 <span class="variants-info">
-                                    Starting from ₹{{ variant_summary.price_range.min }}
+                                    Starting from <span class="price">₹{{ variant_summary.price_range.min }}</span>
                                 </span>
-                                {% endwith %}
-                            {% endif %}
-                        </h3>
-                        <!-- Add truncated description -->
-                        <p class="product-description">
-                            {{ product.description|truncatechars:150 }}
-                            {% if product.description|length > 150 %}
-                                <a href="{% url 'store:product_detail' product.id %}" class="read-more">Read more</a>
-                            {% endif %}
-                        </p>
-                        <div class="price-info">
-                            {% if product.has_variants %}
-                                {% with variant_summary=product.get_variant_summary %}
-                                <span class="price">
-                                    ₹{{ variant_summary.price_range.min }} - ₹{{ variant_summary.price_range.max }}
-                                </span>
-                                {% endwith %}
-                            {% else %}
+                            </p>
+                        {% endif %}
+                        <!-- Rest of product details -->
+                        {% if not product.has_variants %}
+                            <div class="price-info">
                                 <span class="price">₹{{ product.price }}</span>
-                            {% endif %}
-                        </div>
+                            </div>
+                            <div class="incl-taxes">Incl. of all taxes</div>
+                            <div class="stock-status {% if product.stock == 0 %}out-of-stock{% elif product.stock <= 5 %}low-stock{% else %}in-stock{% endif %}">
+                                <span class="stock-indicator"></span>
+                                <span class="stock-text">
+                                    {% if product.stock == 0 %}Out of Stock
+                                    {% elif product.stock <= 5 %}Few Items Left
+                                    {% else %}In Stock{% endif %}
+                                </span>
+                            </div>
+                        {% else %}
+                            {% with variant_summary=product.get_variant_summary %}
+                            <span class="variants-info">
+                                Starting from <span class="price">₹{{ variant_summary.price_range.min }}</span>
+                            </span>
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    <div class="product-actions">
                         {% if product.has_variants %}
                             <a href="{% url 'store:product_detail' product.id %}" class="select-options-btn">
                                 <i class="fas fa-list-ul"></i> Select Options
                             </a>
                         {% else %}
-                            <!-- Regular add to cart button for non-variant products -->
                             <div class="quantity-controls">
                                 <div class="quantity-selector" data-product-id="{{ product.id }}">
                                     <button class="qty-btn decrease" type="button">
@@ -173,25 +188,13 @@ Home
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
-                                <div class="stock-status {% if product.stock == 0 %}out-of-stock{% elif product.stock <= 5 %}low-stock{% else %}in-stock{% endif %}">
-                                    <span class="stock-indicator"></span>
-                                    <span class="stock-text">
-                                        {% if product.stock == 0 %}
-                                            Out of Stock
-                                        {% elif product.stock <= 5 %}
-                                            Few Items Left
-                                        {% else %}
-                                            In Stock
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <button class="add-to-cart-btn btn" 
-                                        data-product-id="{{ product.id }}"
-                                        data-product-name="{{ product.name }}"
-                                        {% if product.has_variants %}data-requires-variant="true"{% endif %}>
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
                             </div>
+                            <button class="add-to-cart-btn btn" 
+                                    data-product-id="{{ product.id }}"
+                                    data-product-name="{{ product.name }}"
+                                    {% if product.has_variants %}data-requires-variant="true"{% endif %}>
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
                         {% endif %}
                     </div>
                 </div>
