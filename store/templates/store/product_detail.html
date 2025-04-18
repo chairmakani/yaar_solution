@@ -27,23 +27,30 @@
         <!-- Product Images Section -->
         <div class="product-images">
             <div class="main-image">
-                {% if product.primary_image %}
-                    <img id="main-product-image" src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}">
+                {% if product.primary_image and product.primary_image.image %}
+                    <img id="main-product-image" 
+                         src="{{ product.primary_image.image.url }}" 
+                         alt="{{ product.primary_image.alt_text|default:product.name }}">
                 {% else %}
-                    <img id="main-product-image" src="{% static 'images/no-image.jpg' %}" alt="{{ product.name }}">
+                    <img id="main-product-image" 
+                         src="{% static 'images/no-image.jpg' %}" 
+                         alt="{{ product.name }}">
                 {% endif %}
             </div>
             
             {% if product.images.count > 1 %}
             <div class="thumbnail-gallery">
                 {% for image in product.images.all %}
-                <div class="thumbnail {% if image.is_primary %}active{% endif %}" data-image="{{ image.image.url }}">
-                    <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}">
-                </div>
+                    {% if image.image %}
+                        <div class="thumbnail {% if image.is_primary %}active{% endif %}" data-image="{{ image.image.url }}">
+                            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}">
+                        </div>
+                    {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
         </div>
+        
         
         <!-- Product Information Section -->
         <div class="product-info"

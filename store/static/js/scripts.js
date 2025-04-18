@@ -940,3 +940,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Add NGO tab handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching logic
+    const ngosTab = document.getElementById('ngos-tab');
+    const ngosContent = document.getElementById('ngos-content');
+    
+    if (ngosTab) {
+        ngosTab.addEventListener('click', function() {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to NGOs tab and content
+            ngosTab.classList.add('active');
+            ngosContent.classList.add('active');
+        });
+    }
+
+    // NGO location toggle logic
+    document.querySelectorAll('.ngo-location-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const location = this.parentElement;
+            location.classList.toggle('active');
+        });
+    });
+});
+

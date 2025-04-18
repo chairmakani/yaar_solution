@@ -620,6 +620,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Remove all notification-related functions and use cart manager instead
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if cart manager exists
+    if (!window.cartManager) {
+        console.error('Cart manager not initialized!');
+        return;
+    }
+
+    // Use cart manager's notification system for all notifications
+    window.showNotification = (message, type) => {
+        window.cartManager.showNotification(message, type);
+    };
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const sortForm = document.getElementById('sort-form');
     const sortSelect = document.getElementById('sort-options');
@@ -741,3 +755,205 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Cart Update Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const cartCount = document.getElementById('cart-count');
+    const cartTotal = document.getElementById('cart-total');
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            // Get product details and validate stock
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            const quantityInput = document.querySelector(`.quantity-input[data-product-id="${productId}"]`);
+            const quantity = parseInt(quantityInput?.value || 1);
+            const maxStock = parseInt(quantityInput?.dataset.maxStock || 0);
+
+            // Check stock before proceeding
+            if (quantity > maxStock) {
+                window.cartManager.showNotification(`Only ${maxStock} items available`, 'warning');
+                return;
+            }
+
+            // Show loading state
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            try {
+                const response = await fetch('/api/cart/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: quantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update cart count with bounce animation
+                    updateCartCount(data.cart.itemCount);
+                    
+                    // Update cart total with fade animation
+                    updateCartTotal(data.cart.total);
+                    
+                    // Show success notification
+                    window.cartManager.showNotification(
+                        `Added ${quantity} × ${productName} to cart`, 
+                        'success'
+                    );
+
+                    // Update button state
+                    this.innerHTML = '<i class="fas fa-check"></i> Added!';
+                    
+                    // Update stock display if needed
+                    if (data.remaining_stock !== undefined) {
+                        updateStockDisplay(productId, data.remaining_stock);
+                    }
+                } else {
+                    // Handle specific error cases
+                    if (data.error === 'out_of_stock') {
+                        window.cartManager.showNotification('Item is out of stock', 'error');
+                        disableAddToCart(this);
+                    } else if (data.error === 'stock_exceeded') {
+                        window.cartManager.showNotification(
+                            `Only ${data.available_stock} items available`, 
+                            'warning'
+                        );
+                    } else {
+                        throw new Error(data.message || 'Failed to add to cart');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                window.cartManager.showNotification(
+                    error.message || 'Failed to add item to cart', 
+                    'error'
+                );
+            } finally {
+                // Reset button after delay (unless disabled due to stock)
+                if (!this.classList.contains('out-of-stock')) {
+                    setTimeout(() => {
+                        this.disabled = false;
+                        this.innerHTML = originalText;
+                    }, 2000);
+                }
+            }
+        });
+    });
+
+    // Helper function to update stock display
+    function updateStockDisplay(productId, stock) {
+        const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+        if (!productCard) return;
+
+        const stockStatus = productCard.querySelector('.stock-status');
+        const quantityInput = productCard.querySelector('.quantity-input');
+        const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+
+        if (stock <= 0) {
+            // Out of stock
+            disableAddToCart(addToCartBtn);
+            if (stockStatus) {
+                stockStatus.className = 'stock-status out-of-stock';
+                stockStatus.innerHTML = `
+                    <span class="stock-indicator"></span>
+                    <span class="stock-text">Out of Stock</span>
+                `;
+            }
+        } else if (stock <= 5) {
+            // Low stock warning
+            if (stockStatus) {
+                stockStatus.className = 'stock-status low-stock';
+                stockStatus.innerHTML = `
+                    <span class="stock-indicator"></span>
+                    <span class="stock-text">Only ${stock} left!</span>
+                `;
+            }
+        }
+
+        // Update quantity input max value
+        if (quantityInput) {
+            quantityInput.dataset.maxStock = stock;
+            if (parseInt(quantityInput.value) > stock) {
+                quantityInput.value = stock;
+            }
+        }
+    }
+
+    // Helper function to disable add to cart button
+    function disableAddToCart(button) {
+        if (!button) return;
+        button.disabled = true;
+        button.classList.add('disabled', 'out-of-stock');
+        button.innerHTML = '<i class="fas fa-times"></i> Out of Stock';
+    }
+
+    // ...rest of existing code...
+});
+
+// Enhanced notification handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Create notifications container if it doesn't exist
+    let notificationsContainer = document.getElementById('cart-notifications');
+    if (!notificationsContainer) {
+        notificationsContainer = document.createElement('div');
+        notificationsContainer.id = 'cart-notifications';
+        notificationsContainer.className = 'notifications-container';
+        document.body.appendChild(notificationsContainer);
+    }
+
+    // Update showNotification function to use the container
+    window.showNotification = function(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `cart-notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                           type === 'error' ? 'exclamation-circle' : 
+                           'exclamation-triangle'}"></i>
+            <span class="notification-message">${message}</span>
+        `;
+        
+        notificationsContainer.appendChild(notification);
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Remove notification after delay
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    };
+
+    // Update cart manager notification handling
+    if (window.cartManager) {
+        window.cartManager.showNotification = window.showNotification;
+    }
+});
+
+// Update add to cart success handling
+async function handleAddToCart(button, productId, productName) {
+    try {
+        // ...existing code...
+        if (data.success) {
+            window.showNotification(`Added ${productName} to cart!`, 'success');
+            // ...rest of success handling
+        } else {
+            window.showNotification(data.message || 'Failed to add item to cart', 'error');
+        }
+    } catch (error) {
+        window.showNotification('Error adding item to cart', 'error');
+    }
+}

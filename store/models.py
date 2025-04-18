@@ -144,6 +144,18 @@ class Product(models.Model):
             return self.images.exclude(id=self.primary_image.id)
         return self.images.none()
 
+    @property
+    def get_primary_image_url(self):
+        """Safely get the primary image URL or return None"""
+        if self.primary_image and self.primary_image.image:
+            return self.primary_image.image.url
+        return None
+
+    @property
+    def get_all_valid_images(self):
+        """Return only valid images"""
+        return [img for img in self.images.all() if img.image]
+
     def get_organized_variants(self):
         """Return variants organized by attributes"""
         if not self.has_variants:

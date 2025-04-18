@@ -91,6 +91,7 @@ body {
     margin-right: 5px;
 }
 
+
 /* Update cart details */
 .cart-details {
     flex: 0 0 auto;
@@ -140,13 +141,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: 5px 15px;
     text-decoration: none;
     color: white;
+    min-width: 120px; /* Add minimum width */
+    height: 100%;
 }
 
 .logo-main {
-    font-size: 24px;
+    font-size: clamp(18px, 2vw, 24px); /* Responsive font size */
     font-weight: bold;
     letter-spacing: 1.5px;
     background: linear-gradient(
@@ -162,33 +166,17 @@ body {
     -webkit-text-fill-color: transparent;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     animation: gradientMove 8s linear infinite;
+    white-space: nowrap; /* Prevent wrapping */
 }
 
 .logo-subtext {
-    font-size: 12px;
-    margin-top: 4px;
-    letter-spacing: 3px;
+    font-size: clamp(8px, 1.2vw, 12px); /* Responsive font size */
+    margin-top: 2px;
+    letter-spacing: clamp(1px, 0.3vw, 3px);
     font-style: italic;
     color: rgba(255, 255, 255, 0.9);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    position: relative;
-    padding: 0 10px;
-}
-
-.logo-subtext::before,
-.logo-subtext::after {
-    content: '•';
-    position: absolute;
-    color: #a8e6cf;
-    font-style: normal;
-}
-
-.logo-subtext::before {
-    left: -2px;
-}
-
-.logo-subtext::after {
-    right: -2px;
+    white-space: nowrap; /* Prevent wrapping */
 }
 
 @keyframes gradientMove {
@@ -251,6 +239,11 @@ body {
     }
 }
 
+@media (max-width: 360px) {
+    .logo {
+        min-width: 80px;
+    }
+}
 
 .nav-icons {
     display: none; /* Hidden by default for larger screens */
@@ -655,6 +648,16 @@ body {
     display: flex;
     opacity: 1;
     visibility: visible;
+}
+
+.contact-number a {
+    color: inherit; 
+    text-decoration: none; 
+}
+
+.contact-number a:hover {
+    text-decoration: none;  
+    color: inherit; 
 }
 
 /* Search Bar */
@@ -2280,3 +2283,227 @@ body {
 .sidebar-ngo-items li a:hover small {
     color: rgba(255, 255, 255, 0.8);
 }
+
+/* NGO Sidebar Styles */
+.sidebar-ngo-locations {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-ngo-location {
+    margin-bottom: 8px;
+}
+
+.ngo-location-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.ngo-location-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.sidebar-ngo-location.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-ngo-items {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding-left: 15px;
+}
+
+.sidebar-ngo-location.active .sidebar-ngo-items {
+    max-height: 500px;
+}
+
+.sidebar-ngo-items li {
+    margin: 0;
+}
+
+.sidebar-ngo-items a {
+    display: block;
+    padding: 10px 15px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.sidebar-ngo-items a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 20px;
+}
+
+.sidebar-ngo-items small {
+    display: block;
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Enhanced Profile Content Styles */
+#profile-content ul {
+    padding: 0;
+    margin: 0;
+}
+
+#profile-content li {
+    margin: 8px 0;
+}
+
+#profile-content a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#profile-content a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+#profile-content a i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+#profile-content a:hover i {
+    transform: scale(1.1);
+}
+
+#profile-content a.text-danger {
+    color: #ff6b6b;
+}
+
+#profile-content a.text-danger:hover {
+    background: rgba(255, 107, 107, 0.1);
+}
+
+/* Footer Avatar Styles */
+.fixed-footer .avatar-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fixed-footer .footer-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.fixed-footer .footer-item i,
+.fixed-footer .footer-item .avatar-mini {
+    margin-bottom: 4px;
+    font-size: 1.5rem;
+}
+
+.fixed-footer .footer-item span {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Authentication Buttons */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-login,
+.btn-register {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-login {
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.btn-login:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-register {
+    background-color:transparent;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+.btn-register:hover {
+    background-color: transparent;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-login i,
+.btn-register i {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-login:hover i,
+.btn-register:hover i {
+    transform: translateX(3px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .auth-buttons {
+        margin-top: 10px;
+    }
+
+    .btn-login, 
+    .btn-register {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-login i,
+    .btn-register i {
+        font-size: 1rem;
+    }
+}
+
+
+

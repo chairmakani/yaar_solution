@@ -350,6 +350,10 @@ def add_to_cart(request):
         variant_id = data.get('variant_id')
         quantity = int(data.get('quantity', 1))
         
+        # Validate quantity
+        if quantity < 1:
+            return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
+
         # Verify the product exists
         product = get_object_or_404(Product, id=product_id)
         
@@ -359,32 +363,41 @@ def add_to_cart(request):
                 return JsonResponse({
                     'success': False,
                     'message': 'Please select a variant'
-                })
+                }, status=400)
             
             variant = get_object_or_404(ProductVariant, id=variant_id, product_id=product_id)
+
             if variant.stock < quantity:
                 return JsonResponse({
                     'success': False,
                     'message': f'Only {variant.stock} items available'
-                })
+                }, status=400)
             
             item_key = f'variant_{variant_id}'
             price = variant.price
             max_quantity = variant.stock
+            product_name = f"{product.name} - {variant.value} {variant.get_unit_display()}"
+            
+            image_url = variant.image.url if getattr(variant, 'image', None) else (
+                product.primary_image.image.url if product.primary_image else None
+            )
+
         else:
             if product.stock < quantity:
                 return JsonResponse({
                     'success': False,
                     'message': f'Only {product.stock} items available'
-                })
+                }, status=400)
             
             item_key = f'product_{product_id}'
             price = product.price
             max_quantity = product.stock
+            product_name = product.name
+            image_url = product.primary_image.image.url if product.primary_image else None
 
-        # Get or create cart
+        # Get or create cart from session
         cart = request.session.get('cart', {})
-        
+
         # Update or add to cart
         if item_key in cart:
             total_quantity = cart[item_key]['quantity'] + quantity
@@ -392,41 +405,43 @@ def add_to_cart(request):
                 return JsonResponse({
                     'success': False,
                     'message': f'Cannot add more items. Maximum available: {max_quantity}'
-                })
+                }, status=400)
             cart[item_key]['quantity'] = total_quantity
         else:
             cart[item_key] = {
                 'product_id': product_id,
                 'variant_id': variant_id,
                 'quantity': quantity,
-                'price': str(price),
-                'name': product.name,
-                'image': product.primary_image.image.url if product.primary_image else None,
+                'price': str(price),  # store as string to avoid float precision issues
+                'name': product_name,
+                'image': image_url,
                 'max_quantity': max_quantity
             }
         
+        # Save updated cart back to session
         request.session['cart'] = cart
         request.session.modified = True
+
+        # Calculate cart totals
+        total_items = sum(item['quantity'] for item in cart.values())
+        total_amount = sum(Decimal(item['price']) * item['quantity'] for item in cart.values())
 
         return JsonResponse({
             'success': True,
             'message': 'Added to cart successfully',
             'cart': {
-                'total_items': sum(item['quantity'] for item in cart.values()),
-                'total_amount': str(sum(
-                    Decimal(item['price']) * item['quantity'] 
-                    for item in cart.values()
-                )),
+                'total_items': total_items,
+                'total_amount': str(total_amount),
                 'items': list(cart.values())
             }
         })
         
     except Exception as e:
-        logger.error(f"Add to cart error: {str(e)}")
+        logger.error(f"Add to cart error: {str(e)}", exc_info=True)
         return JsonResponse({
             'success': False,
-            'message': str(e)
-        }, status=400)
+            'message': 'Something went wrong. Please try again.'
+        }, status=500)
 
 @require_POST
 def remove_from_cart(request):
