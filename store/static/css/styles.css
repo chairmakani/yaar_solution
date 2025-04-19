@@ -960,6 +960,78 @@ body {
 .menu-sidebar {
     position: fixed;
     top: 0;
+    right: -100%;
+    width: 85%;
+    max-width: 350px;
+    height: 100vh;
+    background-color: #2b8a3e;
+    transition: right 0.3s ease-in-out;
+    z-index: 2000;
+    overflow-y: auto;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    padding-top: 60px;
+}
+
+.menu-sidebar.open {
+    right: 0;
+}
+
+/* Close Button */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: white;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.tab-button.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+}
+
+.menu-sidebar {
+    position: fixed;
+    top: 0;
     right: -300px; /* Hidden initially on the right */
     width: 300px;
     height: 100%;
@@ -1011,7 +1083,6 @@ body {
 
 .menu-content {
     flex: 1;
-    padding: 20px;
     overflow-y: auto;
 }
 
@@ -1839,11 +1910,8 @@ body {
 }
 
 @keyframes cartBounce {
-    0%, 20% { transform: scale(1); }
-    40% { transform: scale(1.4); }
-    60% { transform: scale(0.8); }
-    80% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
 }
 
 /* Cart Notification Animation */
@@ -2503,6 +2571,331 @@ body {
     .btn-register i {
         font-size: 1rem;
     }
+}
+
+/* Enhanced Mobile Sidebar */
+.menu-sidebar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: min(80%, 300px);
+    height: 100vh;
+    background-color: #2b8a3e;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+    overflow-y: auto;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    padding-top: 60px;
+}
+
+.menu-sidebar.open {
+    transform: translateX(0%);
+}
+
+/* Improved Responsive Breakpoints */
+@media screen and (max-width: 1264px) {
+    .nav-links, 
+    .contact-number,
+    .search-container {
+        display: none;
+    }
+
+    .nav-icons {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo-main {
+        font-size: 18px;
+    }
+
+    .logo-subtext {
+        font-size: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .navbar {
+        padding: 0 10px;
+        height: 60px;
+    }
+
+    .logo {
+        min-width: 100px;
+    }
+
+    .nav-icons {
+        gap: 10px;
+    }
+
+    .nav-icons .icon {
+        font-size: 1.2rem;
+    }
+
+    .cart-container {
+        padding: 6px 10px;
+    }
+
+    .cart-count {
+        min-width: 16px;
+        height: 16px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Device-specific optimizations */
+@media screen and (min-width: 2000px) {
+    .navbar {
+        padding: 0 calc((100% - 1920px) / 2);
+    }
+}
+
+@supports (padding: max(0px)) {
+    .menu-sidebar {
+        padding-top: max(60px, env(safe-area-inset-top));
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .navbar {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+    }
+}
+
+/* Notch and Cutout handling */
+@media screen and (orientation: portrait) and (width: 2780px) {
+    .navbar {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .menu-sidebar {
+        padding-top: calc(60px + env(safe-area-inset-top));
+    }
+}
+
+/* Mobile Sidebar Styles */
+.menu-sidebar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 85%;
+    max-width: 350px;
+    height: 100vh;
+    background-color: #2b8a3e;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+    overflow-y: auto;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-sidebar.open {
+    transform: translateX(0%);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: white;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.tab-button.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 15px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* NGO Locations */
+.sidebar-ngo-locations {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-ngo-location {
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ngo-location-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.ngo-location-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.sidebar-ngo-location.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-ngo-items {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-ngo-location.active .sidebar-ngo-items {
+    max-height: 500px;
+}
+
+.sidebar-ngo-items li {
+    list-style: none;
+}
+
+.sidebar-ngo-items a {
+    display: block;
+    padding: 10px 15px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-ngo-items a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 20px;
+}
+
+.sidebar-ngo-items small {
+    display: block;
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Close Button */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 576px) {
+    .menu-sidebar {
+        width: 85%;
+    }
+}
+
+@media screen and (min-width: 577px) and (max-width: 768px) {
+    .menu-sidebar {
+        width: 75%;
+    }
+}
+
+/* iOS Safe Area Support */
+@supports (padding: max(0px)) {
+    .menu-sidebar {
+        padding-top: max(60px, env(safe-area-inset-top));
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* NGO Sidebar Items */
+.sidebar-ngo-items {
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-ngo-location.active .sidebar-ngo-items {
+    max-height: 500px;
+    padding: 10px 0;
+}
+
+.ngo-location-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.sidebar-ngo-location.active .toggle-icon {
+    transform: rotate(180deg);
 }
 
 

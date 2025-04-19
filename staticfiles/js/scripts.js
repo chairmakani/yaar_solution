@@ -1,3 +1,89 @@
+class SiteManager {
+    constructor() {
+        // Wait for DOM to be loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initializeComponents());
+        } else {
+            this.initializeComponents();
+        }
+    }
+
+    initializeComponents() {
+        this.initSearchComponents();
+        this.initMenuComponents();
+        this.initCartComponents();
+    }
+
+    initSearchComponents() {
+        const searchToggle = document.getElementById('search-toggle');
+        const searchBar = document.querySelector('.search-bar-container');
+        
+        if (searchToggle && searchBar) {
+            searchToggle.addEventListener('click', () => {
+                searchBar.classList.add('active');
+                const searchInput = searchBar.querySelector('input');
+                if (searchInput) searchInput.focus();
+            });
+        }
+
+        const cancelBtn = document.querySelector('.cancel-btn');
+        if (cancelBtn && searchBar) {
+            cancelBtn.addEventListener('click', () => {
+                searchBar.classList.remove('active');
+            });
+        }
+    }
+
+    initMenuComponents() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuSidebar = document.getElementById('menu-sidebar');
+
+        if (menuToggle && menuSidebar) {
+            menuToggle.addEventListener('click', () => menuSidebar.classList.add('open'));
+
+            const closeSidebar = document.getElementById('close-sidebar');
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', () => menuSidebar.classList.remove('open'));
+            }
+
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (!menuSidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    menuSidebar.classList.remove('open');
+                }
+            });
+        }
+    }
+
+    initCartComponents() {
+        const cartTrigger = document.getElementById('cart-trigger');
+        const miniCart = document.getElementById('mini-cart');
+
+        if (cartTrigger && miniCart) {
+            cartTrigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                miniCart.classList.toggle('active');
+            });
+
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (miniCart.classList.contains('active') && 
+                    !cartTrigger.contains(e.target) && 
+                    !miniCart.contains(e.target)) {
+                    miniCart.classList.remove('active');
+                }
+            });
+        }
+    }
+}
+
+// Initialize site manager
+const siteManager = new SiteManager();
+
+// Export functions for global use if needed
+window.toggleSearchBar = () => siteManager.toggleSearchBar();
+window.toggleView = () => siteManager.toggleView();
+
 const searchBar = document.getElementById('search-bar-big');
 const searchResultsBig = document.getElementById('search-results-big');
 
@@ -939,4 +1025,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Add NGO tab handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching logic
+    const ngosTab = document.getElementById('ngos-tab');
+    const ngosContent = document.getElementById('ngos-content');
+    
+    if (ngosTab) {
+        ngosTab.addEventListener('click', function() {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to NGOs tab and content
+            ngosTab.classList.add('active');
+            ngosContent.classList.add('active');
+        });
+    }
+
+    // NGO location toggle logic
+    document.querySelectorAll('.ngo-location-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const location = this.parentElement;
+            location.classList.toggle('active');
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize event listeners only if elements exist
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    if (mobileNavToggle) {
+        mobileNavToggle.addEventListener('click', toggleMobileNav);
+    }
+    
+    const searchIcon = document.querySelector('.search-icon');
+    if (searchIcon) {
+        searchIcon.addEventListener('click', toggleSearchBar);
+    }
+
+    // ... rest of your initialization code
+});
+
+// ... existing code ...
 

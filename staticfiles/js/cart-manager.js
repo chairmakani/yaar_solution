@@ -212,39 +212,47 @@ class CartManager {
     }
 
     showNotification(message, type = 'success') {
-        const isMobile = window.innerWidth <= 768;
-        const notificationContainer = document.getElementById('cart-notifications');
-        
-        if (!notificationContainer) return;
+        const container = document.getElementById('cart-notifications');
+        if (!container) return;
+
+        // Remove existing notifications of the same type
+        const existingNotifications = container.querySelectorAll(`.cart-notification.${type}`);
+        existingNotifications.forEach(note => {
+            note.classList.remove('show');
+            setTimeout(() => note.remove(), 300);
+        });
 
         const notification = document.createElement('div');
-        notification.className = `cart-notification ${type} ${isMobile ? 'mobile' : ''}`;
+        notification.className = `cart-notification ${type}`;
+        
+        // Select icon based on type
+        const icon = type === 'success' ? 'check-circle' :
+                    type === 'error' ? 'times-circle' :
+                    type === 'warning' ? 'exclamation-triangle' : 'info-circle';
         
         notification.innerHTML = `
-            <div class="notification-icon">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-            </div>
-            <div class="notification-content">
-                <p class="notification-message">${message}</p>
-            </div>
+            <i class="fas fa-${icon}"></i>
+            <p class="notification-message">${message}</p>
         `;
+        
+        container.appendChild(notification);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            notification.classList.add('show');
+        });
 
-        notificationContainer.appendChild(notification);
-
-        // Position notification for mobile
-        if (isMobile) {
-            notification.style.bottom = '70px'; // Above mobile footer
-            notification.style.right = '10px';
-            notification.style.left = '10px';
-            notification.style.width = 'auto';
-        }
-
-        setTimeout(() => notification.classList.add('show'), 100);
-
+        // Auto remove after delay
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+
+        // Add click to dismiss
+        notification.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        });
     }
 
     async makeRequest(url, options = {}) {
@@ -390,29 +398,43 @@ class CartManager {
     }
 
     async checkStockUpdates() {
-        const productElements = document.querySelectorAll('[data-product-id]');
-        const productIds = Array.from(productElements).map(el => el.dataset.productId);
-        
-        if (!productIds.length) return;
-
         try {
-            const response = await fetch('/api/stock/check/', {
+            const response = await this.makeRequest('/api/stock/check/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.csrfToken
-                },
-                body: JSON.stringify({ product_ids: productIds })
+                body: JSON.stringify({ 
+                    product_ids: Array.from(document.querySelectorAll('[data-product-id]'))
+                        .map(el => el.dataset.productId)
+                })
             });
 
-            const stockData = await response.json();
-            this.updateStockUI(stockData);
+            if (response.success && Array.isArray(response.stock_data)) {
+                // Filter out duplicates
+                const uniqueStockData = [];
+                const seen = new Set();
+
+                response.stock_data.forEach(item => {
+                    const key = `${item.product_id}-${item.variant_id || ''}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueStockData.push(item);
+                    }
+                });
+
+                this.updateStockUI(uniqueStockData);
+            } else {
+                console.warn('Invalid stock data received:', response);
+            }
         } catch (error) {
             console.error('Failed to check stock:', error);
         }
     }
 
     updateStockUI(stockData) {
+        if (!Array.isArray(stockData)) {
+            console.warn('Stock data is not an array:', stockData);
+            return;
+        }
+
         stockData.forEach(({ product_id, stock, variant_id = null }) => {
             const selector = variant_id 
                 ? `[data-product-id="${product_id}"][data-variant-id="${variant_id}"]`

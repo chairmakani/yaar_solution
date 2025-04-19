@@ -1,8 +1,12 @@
 <!-- filepath: /e:/yaarsolution_project/ecommerce/store/templates/base.html -->
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Add CSRF token meta tag -->
@@ -316,6 +320,9 @@
             </svg>
         </button>
 
+        <!-- Add these before your scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="{% static 'js/csrf.js' %}"></script>
         <script src="{% static 'js/scripts.js' %}"></script>
         <script src="{% static 'js/search.js' %}"></script>
         <script src="{% static 'js/cart.js' %}"></script>

@@ -398,29 +398,43 @@ class CartManager {
     }
 
     async checkStockUpdates() {
-        const productElements = document.querySelectorAll('[data-product-id]');
-        const productIds = Array.from(productElements).map(el => el.dataset.productId);
-        
-        if (!productIds.length) return;
-
         try {
-            const response = await fetch('/api/stock/check/', {
+            const response = await this.makeRequest('/api/stock/check/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.csrfToken
-                },
-                body: JSON.stringify({ product_ids: productIds })
+                body: JSON.stringify({ 
+                    product_ids: Array.from(document.querySelectorAll('[data-product-id]'))
+                        .map(el => el.dataset.productId)
+                })
             });
 
-            const stockData = await response.json();
-            this.updateStockUI(stockData);
+            if (response.success && Array.isArray(response.stock_data)) {
+                // Filter out duplicates
+                const uniqueStockData = [];
+                const seen = new Set();
+
+                response.stock_data.forEach(item => {
+                    const key = `${item.product_id}-${item.variant_id || ''}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueStockData.push(item);
+                    }
+                });
+
+                this.updateStockUI(uniqueStockData);
+            } else {
+                console.warn('Invalid stock data received:', response);
+            }
         } catch (error) {
             console.error('Failed to check stock:', error);
         }
     }
 
     updateStockUI(stockData) {
+        if (!Array.isArray(stockData)) {
+            console.warn('Stock data is not an array:', stockData);
+            return;
+        }
+
         stockData.forEach(({ product_id, stock, variant_id = null }) => {
             const selector = variant_id 
                 ? `[data-product-id="${product_id}"][data-variant-id="${variant_id}"]`
