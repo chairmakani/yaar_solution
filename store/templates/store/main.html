@@ -6,7 +6,6 @@
 
     <style>
         /* Slider container */
-       
         .slider {
             position: relative;
             width: 100%;
@@ -22,9 +21,9 @@
         }
 
         .slider-images img {
-            width: 1500px; /* Adjusted width to fit img-7.jpg */
-            height: 650px; /* Adjusted height to fit img-7.jpg */
-            object-fit:fill; /* Ensures the image fits within the dimensions */
+            width: 1500px;
+            height: 650px;
+            object-fit:fill;
             flex-shrink: 0;
         }
 
@@ -45,6 +44,7 @@
             left: 10px;
         }
 
+        .slider
         .slider-btn.right {
             right: 10px;
         }
@@ -52,12 +52,23 @@
         .small-images {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-top: 20px;
+            justify-content: space-between;
+            margin: 20px auto;
+            padding: 0 20px;
+            max-width: 1200px;
+        }
+
+        .small-images .service-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 0;
+            flex: 1;
         }
 
         .small-images img {
-            width: 450px; /* Reduce size */
+            width: 450px;
             height: auto;
             margin: 0 10px;
         }
@@ -97,8 +108,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding-top: 20px;
     margin-bottom: 20px;
-    margin-left: 80px; /* Added padding to move the link to the right */
+    margin-left: 50px; /* Added padding to move the link to the right */
 }
   
 .carousel-header h2 {
@@ -120,28 +132,37 @@
 /*feature image side*/
 .carousel-container {
     position: relative;
-    width: 90%;
+    width: 98%;  /* Reduced width */
     overflow: hidden;
-    margin: 100px;
+    margin: 20px auto;  /* Changed margin and added auto for centering */
+    padding: 0 40px;  /* Reduced padding */
 }
 
 /* Carousel */
 .carousel {
     display: flex;
     transition: transform 0.5s ease-in-out;
-    width: 100%;
+    gap: 5px;  /* Reduced gap between items */
+    justify-content: flex-start; /* Changed to flex-start for proper sliding */
+}
+
+.carousel-container:hover .carousel {
+    animation-play-state: paused;
 }
 
 .carousel-item {
-    flex: 1 0 calc(100% / 5); /* Five items per slide */
+    flex: 0 0 calc(20% - 4px); /* Changed to 5 items per slide */
+    min-width: calc(20% - 4px);
     box-sizing: border-box;
     text-align: center;
-    padding: 5px; /* Reduced padding */
+    padding: 2px;
+    display: block !important; /* Prevent items from being hidden */
+    transition: transform 0.5s ease;
 }
 
 .carousel-item img {
-    width: 200px; /* Adjusted width */
-    height: 150px; /* Adjusted height */
+    width: 180px; /* Smaller width */
+    height: 130px; /* Smaller height */
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -155,38 +176,502 @@
 
 /* Navigation Controls */
 .carousel-control {
-    position: absolute;
-    top: 40%; /* Adjusted from 80% to move buttons up */
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute; /* Changed to absolute */
+    top: 45%; /* Center vertically */
+    transform: translateY(-50%); /* Center vertically */
+    background-color: rgb(14, 107, 53);
     color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 50%; /* Makes the buttons circular */
-    width: 40px; /* Set equal width and height */
+    border: 1px ;
+    width: 40px;
     height: 40px;
-    text-align: center; /* Centers the content */
-    display: flex; /* Added for centering */
-    align-items: center; /* Centers vertically */
-    justify-content: center; /* Centers horizontally */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     cursor: pointer;
-    z-index: 1;
-    font-size: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    z-index: 10; /* Ensure buttons are above images */
+}
+
+.carousel-control:hover {
+    background-color: rgb(33, 176, 95);
+    color: white;
+
 }
 
 .carousel-control.prev {
-    left: 10px;
+    left: 0px;
 }
 
 .carousel-control.next {
-    right: 10px;
+    right: 0px;
 }
 
+.icon {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+.icon p {
+    margin: 0;
+}
+.icon i {
+    font-size: 20px;
+    color: #333;
+    transition: color 0.3s ease;
+}
+.icon i:hover {
+    color: green;
+}
+
+.carousel-item a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.carousel-item a:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+.service-container p {
+    margin-bottom: 20px;
+}
+
+/* Policy links container */
+.policy-links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.policy-links a {
+    margin-right: 15px;
+    color: black;
+    text-decoration: none;
+}
+
+.policy-links a:last-child {
+    margin-right: 0;
+}
+
+/* Footer container */
+.footer-container {
+    border-top: 2px solid #ddd;
+    margin-top: 30px;
+    padding-top: 20px;
+}
+
+/* FSSAI logo container */
+.fssai-logo {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.fssai-logo img {
+    width: 200px;  /* Increased width */
+    height: 80px;  /* Reduced height */
+    object-fit: contain;
+}
+
+/* Company info */
+.info {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.info .address-part {
+    display: inline;
+}
+
+/* Email */
+.email-contact {
+    text-align: center;
+}
+
+.email-contact i {
+    color: green;
+}
+
+/* Mobile View Media Queries */
+@media screen and (max-width: 768px) {
+    /* Slider adjustments */
+    .slider-images img {
+        width: 100%;
+        height: 300px;
+    }
+
+    /* Carousel adjustments */
+    .carousel-container {
+        width: 95%;
+        padding: 0 10px;
+    }
+
+    .carousel-item {
+        flex: 0 0 100%;
+    }
+
+    .carousel-header {
+        margin-left: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Small images section */
+    .small-images {
+        flex-direction: row;
+        gap: 10px;
+        padding: 0 10px;
+    }
+
+    .small-images img {
+        width: 160px;
+        max-width: 100%;
+    }
+
+    .small-images .service-container {
+        margin: 0;
+    }
+
+    .small-images .service-container p {
+        font-size: 14px;
+        margin-bottom: 10px;
+
+    }
+
+    .vertical-line {
+        height: 80px;
+        margin: 0 5px;
+    }
+
+    /* Footer adjustments */
+    .icon {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .footer-container div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .footer-container div:last-child a {
+        margin: 5px 0;
+    }
+
+    /* View All button */
+    .view-all {
+        width: 25%;  /* Changed from 60% to 40% */
+        justify-content: center;
+        font-size: 14px;  /* Added smaller font size */
+        padding: 8px 16px;  /* Reduced padding */
+    }
+
+    /* Policy links container */
+    div[style*="text-align: center; margin-top: 20px;"] {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding: 5px 0;
+        margin: 0 5px;
+        justify-content: flex-start;
+        scrollbar-width: none; /* Firefox */
+        gap: 10px;
+    }
+
+    div[style*="text-align: center; margin-top: 20px;"] a {
+        flex: 0 0 auto;
+        font-size: 12px;
+        padding: 0 5px;
+        white-space: nowrap;
+    }
+
+    /* Policy links container adjustments */
+    .policy-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Create two columns */
+        gap: 8px;  /* Reduced from 15px */
+        padding: 10px;  /* Reduced from 15px */
+        margin: 10px auto;  /* Reduced from 15px */
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .policy-links a {
+        font-size: 14px;  /* Increased from 12px */
+        margin: 0;
+        padding: 6px;    /* Increased from 5px */
+        white-space: normal; /* Allow text to wrap */
+        text-align: center;
+        display: block;  /* Added for better touch targets */
+    }
+
+    /* Left column links */
+    .policy-links a:nth-child(1),
+    .policy-links a:nth-child(2) {
+        justify-self: start; /* Align to left */
+    }
+
+    /* Right column links */
+    .policy-links a:nth-child(3),
+    .policy-links a:nth-child(4) {
+        justify-self: end; /* Align to right */
+    }
+
+    /* Address section adjustments */
+    .info {
+        padding: 0 15px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info h3 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .info p {
+        font-size: 13px;
+        line-height: 1.4;
+        margin: 5px 0;
+    }
+
+    .info br {
+        display: none;
+    }
+
+    .info .address-part {
+        display: block;
+    }
+
+    /* Email contact adjustments */
+    .email-contact {
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    
+    .email-contact i {
+        font-size: 14px;
+    }
+
+    /* Social media icons adjustments */
+    .icon {
+        gap: 15px;
+    }
+    
+    .icon i {
+        font-size: 16px;
+    }
+
+    .fssai-logo {
+        margin: 10px auto;
+        padding: 0 10px;
+    }
+
+    .fssai-logo img {
+        width: 160px;  /* Increased width */
+        height: 60px;  /* Reduced height */
+    }
+
+    .carousel-header h2 {
+        font-size: 1.2rem;  /* Smaller font size for tablets */
+    }
+    .carousel-header a {
+        font-size: 0.9rem;
+    }
+
+    /* Slider dots adjustments for tablet */
+    .slider-dots {
+        bottom: 10px;
+        gap: 4px;
+    }
+
+    .dot {
+        width: 4px;
+        height: 4px;
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+    .slider-images img {
+        height: 200px;
+    }
+
+    .carousel-item img {
+        width: 150px;
+        height: 100px;
+    }
+
+    .small-images img {
+        width: 120px; /* Reduced from 140px */
+    }
+
+    .small-images .service-container p {
+        font-size: 12px;
+        font-weight: normal; /* Remove bold */
+    }
+
+    .icon {
+        gap: 5px; /* Further reduced from 10px */
+    }
+    
+    .icon i {
+        font-size: 14px;
+    }
+
+    .view-all {
+        width: 20%;  /* Reduced from 25% */
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    div[style*="text-align: center; margin-top: 20px;"] a {
+        font-size: 13px;  /* Increased from 11px */
+        padding: 0 5px;   /* Increased from 3px */
+    }
+
+    .policy-links {
+        gap: 5px;  /* Further reduced for smallest screens */
+        padding: 8px;  /* Further reduced padding */
+    }
+
+    .policy-links a {
+        font-size: 12px;  /* Slightly smaller font */
+        padding: 4px;  /* Reduced padding */
+    }
+
+    .info h3 {
+        font-size: 22px;  /* Increased from 20px */
+        margin-bottom: 10px;
+    }
+
+    .info p {
+        font-size: 18px;  /* Increased from 16px */
+        line-height: 1.5;
+        margin: 8px 0;
+    }
+
+    .info .address-part {
+        font-size: 18px;  /* Increased from 16px */
+        display: block;
+        line-height: 1.5;
+        margin-bottom: 5px;
+    }
+
+    .email-contact {
+        font-size: 18px;  /* Increased from 16px */
+        margin: 15px 0;
+    }
+    
+    .email-contact i {
+        font-size: 18px;  /* Increased from 16px */
+    }
+
+    .icon {
+        gap: 10px;
+    }
+    
+    .icon i {
+        font-size: 14px;
+    }
+
+    .fssai-logo img {
+        width: 140px;  /* Increased width */
+        height: 50px;  /* Reduced height */
+    }
+
+    .view-all {
+        width: 25%;  /* Changed from 50% to 35% */
+        font-size: 12px;  /* Smaller font size */
+        padding: 6px 12px;  /* Further reduced padding */
+    }
+
+    .carousel-header h2 {
+        font-size: 1rem;  /* Even smaller font size for mobile */
+    }
+    .carousel-header a {
+        font-size: 0.8rem;
+    }
+
+    /* Slider dots adjustments for mobile */
+    .slider-dots {
+        bottom: 8px;
+        gap: 3px;
+    }
+
+    .dot {
+        width: 3px;
+        height: 3px;
+    }
+
+    .dot.active {
+        transform: scale(1.1);
+    }
+}
+
+        /* Add these new styles for dots */
+        .slider-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;  /* Reduced gap for smaller spacing */
+        }
+
+        .dot {
+            width: 5px;  /* Smaller width */
+            height: 5px;  /* Smaller height */
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);  /* More subtle inactive state */
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dot.active {
+            background: white;
+            transform: scale(1.2);  /* Slight scale up for active dot */
+        }
+
+        /* Mobile Carousel Specific Styles */
+        @media screen and (max-width: 768px) {
+            .mobile-carousel {
+                display: flex;
+                transition: transform 0.3s ease;
+                width: max-content;
+            }
+            
+            .mobile-carousel .carousel-item {
+                flex: 0 0 100%;
+                min-width: 100%;
+                scroll-snap-align: start;
+            }
+        }
+
+        .info p {
+            line-height: 2;  /* Increased from default */
+        }
+
+        .info .address-part {
+            line-height: 2;  /* Increased from default */
+            display: block;
+            margin-bottom: 5px;
+        }
     </style>
     {% endblock %}
     {% block content %}
     {{ block.super }}
-     {% endblock %}
+    {% endblock %}
 
 {% block content2  %}
 
@@ -204,8 +689,7 @@
             <img src="{% static 'images/img-10.jpg' %}" alt="Image 10">
             <img src="{% static 'images/img-11.jpg' %}" alt="Image 11">
         </div>
-        <button class="slider-btn left" onclick="moveSlide(-1)">&#10094;</button>
-        <button class="slider-btn right" onclick="moveSlide(1)">&#10095;</button>
+        <div class="slider-dots"></div>
     </div>  
     
     <!-- Home Page Content -->
@@ -215,58 +699,45 @@
         </div><br><br>
 
         <div class="carousel">
-            {% for product in featured_products %}
+            {% for category in categories %}
             <div class="carousel-item">
-                <img src="{{ product.primary_image.image.url|default:'placeholder.jpg' }}" alt="{{ product.name }}">
-                <p>{{ product.name }}</p>
+                <a href="{% url 'store:category_products' category.id %}?product_filter={{ category.name }}">
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}">
+                    <p>{{ category.name }}</p>
+                </a>
             </div>
             {% endfor %}
         </div>
-
-        
-        <!-- Navigation Controls -->
+        <button class="carousel-control prev" onclick="moveCarousel(-1)">❮</button>
+        <button class="carousel-control next" onclick="moveCarousel(1)">❯</button>
         <button class="view-all" style="margin-top: 50px;">
-            <i class="fas fa-shopping-cart"></i><a class="link-tag-remove" href="Categories\Shop-all\shop-all.html">View All</a>
+            <i class="fas fa-shopping-cart"></i><a class="link-tag-remove" href="{% url 'store:home' %}">View All</a>
         </button>
     </div>
-    
-    
-    <!--footer-->
-    <div class="small-images">
-        <img src="{% static 'images/courier.png' %}" alt="Courier service">
-        <div class="vertical-line"></div>
-        <img src="{% static 'images/payment.jpg' %}" alt="Payment options">
-    </div>
-    <div style="text-align: center; margin-top:20px; ">
-        <img src="{% static 'images/fssai logo.jpg' %}" alt="fssai logo" style="width: 150px; height:100px;">
-    </div>
-    
-    <div class="info" style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
-        <h3>Address</h3><br>
 
-        <p>Yaar Solution,No.175c/6, Munthal Road, Punnaiyapuram,<br> Puliyankudi, Tenkasi Dt.-627 751. TAMILNADU</p>
-        <p>Phone: +91 9488674103</p>
-        <p>www.yaar.co.in</p>
-    </div>
-    
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="{% url 'store:privacy_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Privacy Policy</a>
-        <a href="{% url 'store:shipping_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Shipping Policy</a>
-        <a href="{% url 'store:terms_policy' %}" style="margin-right: 15px; color: black; text-decoration: none;">Terms Policy</a>
-        <a href="{% url 'store:return_and_cancellation_policy' %}" style="color: black; text-decoration: none;">Return and Cancellation Policy</a>
-        <a href="{% url 'store:contact' %}" style="margin-left: 15px; color: black; text-decoration: none;">Contact</a>
-    </div>
-    <br><br><br>
     {% endblock %}
 
-    {% block extra_js %}
+{% block extra_js %}
     {{ block.super }}
-    
-
     <script>
         const sliderImages = document.querySelector('.slider-images');
         const images = document.querySelectorAll('.slider-images img');
         const totalImages = images.length;
+        const dotsContainer = document.querySelector('.slider-dots');
+
+        // Create dots
+        for (let i = 0; i < totalImages; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            dot.addEventListener('click', () => {
+                currentIndex = i;
+                updateSlider();
+            });
+            dotsContainer.appendChild(dot);
+        }
+
+        const dots = document.querySelectorAll('.dot');
+        dots[0].classList.add('active');
 
         // Clone the first image and append it to the end for seamless looping
         const firstImageClone = images[0].cloneNode(true);
@@ -274,21 +745,121 @@
 
         let currentIndex = 0;
 
-        function autoSlide() {
-            currentIndex++;
+        function updateSlider() {
             sliderImages.style.transition = 'transform 1s ease-in-out';
             sliderImages.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Update dots
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[currentIndex % totalImages].classList.add('active');
+        }
 
-            // Reset to the start without transition when reaching the cloned image
+        function autoSlide() {
+            currentIndex++;
+            updateSlider();
+
             if (currentIndex === totalImages) {
                 setTimeout(() => {
                     sliderImages.style.transition = 'none';
                     sliderImages.style.transform = 'translateX(0)';
                     currentIndex = 0;
-                }, 1000); // Match the transition duration
+                    dots[0].classList.add('active');
+                }, 1000);
             }
         }
 
         setInterval(autoSlide, 3000);
+
+        let currentCarouselPosition = 0;
+        const carousel = document.querySelector('.carousel');
+        const items = document.querySelectorAll('.carousel-item');
+        const itemsPerView = 5;
+        const totalItems = items.length;
+
+        function moveCarousel(direction) {
+            const itemWidth = carousel.offsetWidth / itemsPerView;
+            currentCarouselPosition += direction;
+            
+            // Handle wrapping
+            if (currentCarouselPosition < 0) {
+                currentCarouselPosition = totalItems - itemsPerView;
+            } else if (currentCarouselPosition > totalItems - itemsPerView) {
+                currentCarouselPosition = 0;
+            }
+            
+            // Smooth sliding transition
+            carousel.style.transform = `translateX(-${currentCarouselPosition * itemWidth}px)`;
+        }
+
+        function autoSlideCategories() {
+            moveCarousel(1);
+        }
+
+        // Initialize carousel
+        window.addEventListener('DOMContentLoaded', () => {
+            const slideInterval = setInterval(autoSlideCategories, 3000);
+            
+            carousel.addEventListener('mouseenter', () => {
+                clearInterval(slideInterval);
+            });
+            
+            carousel.addEventListener('mouseleave', () => {
+                setInterval(autoSlideCategories, 3000);
+            });
+        });
+
+        // Mobile-specific carousel code
+        function initMobileCarousel() {
+            if (window.innerWidth <= 768) {
+                const mobileCarousel = document.querySelector('.carousel');
+                const mobileItems = document.querySelectorAll('.carousel-item');
+                let currentPosition = 0;
+                
+                // Clone items for infinite scroll
+                mobileItems.forEach(item => {
+                    const clone = item.cloneNode(true);
+                    mobileCarousel.appendChild(clone);
+                });
+                
+                function slideNext() {
+                    currentPosition++;
+                    const slideWidth = mobileItems[0].offsetWidth;
+                    mobileCarousel.style.transform = `translateX(-${currentPosition * slideWidth}px)`;
+                    
+                    // Reset position when reaching end
+                    if (currentPosition >= mobileItems.length) {
+                        setTimeout(() => {
+                            mobileCarousel.style.transition = 'none';
+                            currentPosition = 0;
+                            mobileCarousel.style.transform = `translateX(0)`;
+                            setTimeout(() => {
+                                mobileCarousel.style.transition = 'transform 0.3s ease';
+                            }, 50);
+                        }, 300);
+                    }
+                }
+
+                // Start auto-sliding for mobile
+                const mobileInterval = setInterval(slideNext, 2000);
+
+                // Stop sliding when user interacts
+                mobileCarousel.addEventListener('touchstart', () => {
+                    clearInterval(mobileInterval);
+                });
+
+                // Resume sliding after interaction
+                mobileCarousel.addEventListener('touchend', () => {
+                    setInterval(slideNext, 2000);
+                });
+            }
+        }
+
+        // Initialize mobile carousel on load and resize
+        window.addEventListener('DOMContentLoaded', initMobileCarousel);
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                initMobileCarousel();
+            }
+        });
     </script>
-    {% endblock %}
+{% endblock %}

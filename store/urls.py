@@ -3,11 +3,13 @@ from django.contrib.auth.views import LogoutView
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.http import require_http_methods
 
 app_name = 'store'  # Add namespace
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.main_view, name='main'),  # Changed from home_view to main_view
+    path('shop/', views.shop_view, name='home'),  # Previous home view now as shop
     path('search/', views.product_search, name='product_search'),  # Change name to product_search
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('category/<int:category_id>/', views.category_products, name='category_products'),
@@ -26,7 +28,7 @@ urlpatterns = [
     path('api/order/create/', views.create_order, name='create_order'),
     path('order/success/', views.order_success, name='order_success'),
     path('login/', views.login_view, name='login'),
-    path('register/', views.register_view, name='register'),
+    path('register/', views.register_view, name='register'),  # Update this line
     path('logout/', LogoutView.as_view(), name='logout'),
     path('profile/', views.profile_view, name='profile'),  # Add this line
     path('profile/orders/', views.orders_view, name='orders'),  # Add this line
@@ -41,7 +43,6 @@ urlpatterns = [
     path('api/stock/check/', views.check_stock, name='check_stock'),
     path('api/profile/update/', views.update_profile, name='update_profile'),
     path('about/', views.about, name='about'),
-    path('main/', views.main, name='main'),
     path('privacy_policy/', views.privacy_policy, name='privacy_policy'),
     path('shipping_policy/', views.shipping_policy, name='shipping_policy'),
     path('terms_policy/', views.terms_policy, name='terms_policy'),

@@ -7,8 +7,6 @@
         body {
             line-height: 1.8; /* Added line spacing */
             color: black;
- 
-
         }
         .cancellation-content { 
             margin: 50px;
@@ -19,6 +17,23 @@
         }
         .cancellation-content p {
             margin-left: 30px; /* Move paragraphs slightly to the right */
+        }
+        
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .cancellation-content {
+                margin: 20px;
+                padding-left: 10px;
+            }
+            .cancellation-content h2, 
+            .cancellation-content h3 {
+                margin-left: 15px;
+                font-size: 1.2em;
+            }
+            .cancellation-content p {
+                margin-left: 15px;
+                font-size: 0.9em;
+            }
         }
     </style>
     

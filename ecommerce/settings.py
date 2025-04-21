@@ -25,9 +25,33 @@ SECRET_KEY = 'django-insecure-vi6d0wuowjt4n&-dm*!f!x9s%0sytqjv(kghf!fp%lelgy028q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+ALLOWED_HOSTS = ['yaar.co.in', 'www.yaar.co.in']
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://yaar.co.in']
+CSRF_TRUSTED_ORIGINS = [
+    'https://yaar.co.in',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000', 
+    'https://*.amazonaws.com'
+]
+
+# CORS Settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    'https://yaar.co.in',
+    'https://www.yaar.co.in',
+    'http://localhost:8000',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://yaar.co.in',
+    'https://www.yaar.co.in',
+    'http://localhost:8000',
+]
+
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -145,6 +169,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Change to SMTP backend

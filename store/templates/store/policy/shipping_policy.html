@@ -20,6 +20,23 @@
         .shipping-content p {
             margin-left: 30px; /* Move paragraphs slightly to the right */
         }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .shipping-content {
+                margin: 20px;
+                padding-left: 10px;
+            }
+            .shipping-content h2, 
+            .shipping-content h3 {
+                margin-left: 15px;
+                font-size: 1.2em;
+            }
+            .shipping-content p {
+                margin-left: 15px;
+                font-size: 0.9em;
+            }
+        }
     </style> 
     
     {% endblock %}

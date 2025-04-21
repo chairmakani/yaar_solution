@@ -154,25 +154,93 @@
 
 /* Terms Checkbox Styling */
 .checkbox-container {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
     cursor: pointer;
-    font-size: 0.9rem;
 }
 
-.checkbox-container input {
-    width: auto;
-    margin-right: 0.5rem;
+.checkbox-container input[type="checkbox"] {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.checkbox-container label {
+    position: relative;
+    cursor: pointer;
+    padding-left: 30px;
+    user-select: none;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.checkbox-container .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked ~ label .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-container .checkmark:after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input[type="checkbox"]:checked ~ label .checkmark:after {
+    display: block;
+}
+
+.checkbox-container:hover .checkmark {
+    border-color: var(--primary-color);
+}
+
+.checkbox-container input[type="checkbox"]:focus ~ label .checkmark {
+    box-shadow: 0 0 0 3px rgba(31, 110, 46, 0.2);
 }
 
 .checkbox-container a {
     color: var(--primary-color);
     text-decoration: none;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
 }
 
 .checkbox-container a:hover {
     text-decoration: underline;
+}
+
+/* Error state */
+.checkbox-container.error .checkmark {
+    border-color: var(--error-color);
+}
+
+.checkbox-container.error input[type="checkbox"]:focus ~ label .checkmark {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
 }
 
 /* Register Button */

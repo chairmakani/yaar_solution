@@ -1,0 +1,261 @@
+/* Policy links container */
+.policy-links {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.policy-links a {
+    color: #333;
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.policy-links a:hover {
+    color: #1f6e2e;
+}
+
+.policy-links a:last-child {
+    margin-right: 0;
+}
+
+/* Mobile view for policy links */
+@media screen and (max-width: 768px) {
+    .policy-links {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .policy-links a {
+        margin-right: 0;
+    }
+}
+
+/* Footer container */
+.footer-container {
+    background-color: #ffffff; /* Deep green background */
+    color: rgb(0, 0, 0); /* White text for contrast */
+    padding: 40px 20px; /* Generous padding */
+    text-align: center; /* Centers all elements inside */
+    border-top: 2px solid #1a452e; /* Darker border for separation */
+    border-top: 2px solid #ddd;
+    margin-top: 30px;
+    padding-top: 20px;
+}
+
+/* Footer info text */
+.info {
+    margin-bottom: 20px; /* Space below the info section */
+    text-align: center;
+    margin: 20px 0;
+}
+
+.info h3 {
+    font-size: 1.5rem; /* Larger, prominent font for titles */
+    margin-bottom: 10px; /* Space below title */
+}
+
+.info p {
+    font-size: 1rem; /* Standard size for readability */
+    line-height: 1.6; /* More spacious line height */
+    margin: 5px 0; /* Controlled spacing */
+}
+
+.info .address-part {
+    display: block;
+    line-height: 2;
+    margin-bottom: 5px;
+}
+
+/* Email contact icon styles */
+.email-contact {
+    text-align: center;
+}
+
+.email-contact i {
+    color: #e0ece4; /* Subtle gray-green icon color */
+    font-size: 1.2rem; /* Slightly larger icon size */
+    transition: color 0.3s ease; /* Smooth hover transition */
+    color: green;
+}
+
+.email-contact i:hover {
+    color: #a7c4ad; /* Light green hover effect */
+}
+
+/* FSSAI logo */
+.fssai-logo {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.fssai-logo img {
+    width: 200px; /* Sets consistent logo size */
+    height: auto;
+    margin: 20px auto; /* Centers the logo */
+    height: 80px;
+    object-fit: contain;
+}
+
+/* Social media icons */
+.icon {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between icons */
+    margin: 20px 0; /* Space above and below icon section */
+}
+
+.icon p {
+    margin: 0;
+    font-size: 1rem; /* Text size for labels */
+}
+
+.icon i {
+    font-size: 1.5rem; /* Larger icons for visibility */
+    color: #e0ece4; /* Subtle gray-green icon color */
+    transition: color 0.3s ease; /* Smooth hover transition */
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.icon i:hover {
+    color: #a7c4ad; /* Light green hover effect */
+    transform: scale(1.2);
+}
+
+/* Small images */
+.small-images {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px auto;
+    padding: 0 20px;
+    max-width: 1200px;
+}
+
+.small-images img {
+    width: 450px;
+    height: auto;
+    margin: 0 10px;
+}
+
+/* Service container */
+.service-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 0;
+    flex: 1;
+}
+
+/* Vertical line */
+.vertical-line {
+    border-left: 2px solid green;
+    height: 100px;
+    margin: 0 10px;
+}
+
+/* Responsive design for footer */
+@media screen and (max-width: 768px) {
+    .footer-container {
+        padding: 20px 10px; /* Reduced padding */
+    }
+
+    .info h3 {
+        font-size: 1.2rem; /* Slightly smaller title font on tablets */
+    }
+
+    .info p {
+        font-size: 0.9rem; /* Smaller text size */
+    }
+
+    .email-contact i {
+        font-size: 1rem; /* Adjust icon size */
+    }
+
+    .icon {
+        gap: 15px; /* Reduce gap for smaller screens */
+    }
+
+    .icon i {
+        font-size: 1.2rem; /* Adjust icon size for tablets */
+    }
+
+    .fssai-logo img {
+        width: 160px; /* Reduce logo size */
+        height: 60px;
+    }
+
+    .small-images {
+        flex-direction: row;
+        gap: 10px;
+        padding: 0 10px;
+    }
+
+    .small-images img {
+        width: 160px;
+        max-width: 100%;
+    }
+
+    .service-container p {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .vertical-line {
+        height: 80px;
+        margin: 0 5px;
+    }
+
+    .info h3 {
+        font-size: 22px;
+    }
+
+    .info p, .email-contact {
+        font-size: 18px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .footer-container {
+        padding: 15px 5px; /* Compact padding for small devices */
+    }
+
+    .info h3 {
+        font-size: 1rem; /* Smaller font on mobile */
+    }
+
+    .info p {
+        font-size: 0.8rem; /* Reduced font size for better fit */
+    }
+
+    .email-contact i {
+        font-size: 0.9rem; /* Smaller icons */
+    }
+
+    .icon {
+        gap: 10px; /* Reduced gap for icons */
+        flex-wrap: wrap; /* Wrap icons if necessary */
+    }
+
+    .icon i {
+        font-size: 1rem; /* Smaller icons */
+    }
+
+    .fssai-logo img {
+        width: 140px; /* Further reduced logo size */
+    }
+
+    .small-images img {
+        width: 120px;
+    }
+
+    .service-container p {
+        font-size: 12px;
+    }
+}

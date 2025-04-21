@@ -10,14 +10,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Add CSRF token meta tag -->
-    {% csrf_token %}
     <meta name="csrf-token" content="{{ csrf_token }}">
+    {% csrf_token %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
     <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <title>{% block title %}{% endblock title%}</title>
     <style>
     
@@ -38,7 +39,7 @@
         {% endblock extra_css %}
         {% block content %}
         <nav class="navbar">
-            <a href="{% url 'store:home' %}" class="logo">
+            <a href="{% url 'store:main' %}" class="logo">
                 <span class="logo-main">YAAR</span>
                 <span class="logo-subtext">Empowering Communities</span>
             </a>
@@ -123,7 +124,7 @@
         <!-- Second Navbar -->
         <nav class="second-navbar">
             <ul class="nav-menu">
-                <li><a href="{% url 'store:home' %}"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="{% url 'store:main' %}"><i class="fas fa-home"></i> Home</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle">
                         <span>Categories</span>
@@ -265,7 +266,7 @@
 
         <footer style="margin-top: 250px;">
             <div class="fixed-footer" style="display: none;">
-                <a href="{% url 'store:home' %}" class="footer-item">
+                <a href="{% url 'store:main' %}" class="footer-item">
                     <i class="fas fa-home"></i>
                     <span>Home</span>
                 </a>
@@ -302,9 +303,50 @@
         
         {% endblock content %}
 
-        <div class="main-content-wrapper">
-            {% block content2 %}
-            {% endblock content2 %}
+        <div class='main-content-wrapper'>
+            {% block content2 %}{% endblock content2 %}
+
+            <div class="footer-container">
+                <div class="small-images">
+                    <div class="service-container">
+                        <p><b>Courier Partners</b></p>
+                        <img src="{% static 'images/courier.png' %}" alt="Courier service">
+                    </div>
+                    <div class="vertical-line"></div>
+                    <div class="service-container">
+                        <p><b>Payment Options</b></p>
+                        <img src="{% static 'images/payment.jpg' %}" alt="Payment options">
+                    </div>
+                </div>
+                <div class="fssai-logo">
+                    <img src="{% static 'images/fssai logo.jpg' %}" alt="fssai logo">
+                </div>
+                
+                <div class="info">
+                    <h3>Address</h3><br>
+                    <p><span class="address-part">Yaar Solution,No.175c/6, Munthal Road, Punnaiyapuram,</span> 
+                       <span class="address-part">Puliyankudi, Tenkasi Dt.-627 751. Tamilnadu</span></p>
+                    <p>Phone: +91 9488674103</p>
+                    <p>www.yaar.co.in</p>
+                </div>
+                <p class="email-contact"><i class="fa-solid fa-envelope"></i> yaarsolutions@gmail.com</p>
+                <div class="icon">
+                    <p><a href="https://g.co/kgs/TVhzyut" target="_blank"><i class="fa-brands fa-google" style="color: blue;"></i></a></p>
+                    <p><a href="https://www.instagram.com/yaarsolutions/" target="_blank"><i class="fa-brands fa-square-instagram" style="color:rgb(212, 62, 90);"></i></a></p>
+                    <p><a href="https://www.linkedin.com/company/yaarsolutions/" target="_blank"><i class="fa-brands fa-linkedin" style="color:rgb(48, 162, 238);"></i></a></p>
+                    <p><a href="https://youtube.com/@yaarsolutions?si=Yoauh-yJ6revii2Q" target="_blank"><i class="fa-brands fa-youtube" style="color: red;"></i></a></p>
+                    <p><a href="https://www.facebook.com/yaarsolutions" target="_blank"><i class="fa-brands fa-facebook" style="color:rgb(28, 76, 181);"></i></a></p>
+                    <p><a href="https://wa.me/+919488674103" target="_blank"><i class="fa-brands fa-whatsapp" style="color: green;"></i></a></p>
+                </div>
+                
+                <div class="policy-links">
+                    <a href="{% url 'store:privacy_policy' %}">Privacy Policy</a>
+                    <a href="{% url 'store:shipping_policy' %}">Shipping Policy</a>
+                    <a href="{% url 'store:terms_policy' %}">Terms Policy</a>
+                    <a href="{% url 'store:return_and_cancellation_policy' %}">Return and Cancellation Policy</a>
+                </div>
+            </div>
+            <br><br><br>
 
             {% block content3 %}
             {% endblock content3 %}

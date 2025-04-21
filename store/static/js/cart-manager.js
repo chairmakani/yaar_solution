@@ -256,16 +256,37 @@ class CartManager {
     }
 
     async makeRequest(url, options = {}) {
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.csrfToken
-            },
-            credentials: 'same-origin'
-        };
+        try {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken,
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            };
 
-        const response = await fetch(url, { ...defaultOptions, ...options });
-        return await response.json();
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            
+            if (!response.ok) {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Server error');
+                }
+                throw new Error('Network response was not ok');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid response format');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Request failed:', error);
+            throw error;
+        }
     }
 
     // ... existing helper methods ...

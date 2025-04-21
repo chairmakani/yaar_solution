@@ -342,8 +342,17 @@ def cart_view(request):
     
     return render(request, 'store/cart.html', context)
 
-@require_POST
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["POST", "OPTIONS"])
 def add_to_cart(request):
+    if request.method == "OPTIONS":
+        response = JsonResponse({'status': 'ok'})
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, X-CSRFToken"
+        return response
+
     try:
         data = json.loads(request.body)
         product_id = data.get('product_id')
@@ -426,22 +435,27 @@ def add_to_cart(request):
         total_items = sum(item['quantity'] for item in cart.values())
         total_amount = sum(Decimal(item['price']) * item['quantity'] for item in cart.values())
 
-        return JsonResponse({
+        cart_data = {
+            'total_items': total_items,
+            'total_amount': str(total_amount),
+            'items': list(cart.values())
+        }
+
+        # Ensure proper JSON response headers
+        response = JsonResponse({
             'success': True,
             'message': 'Added to cart successfully',
-            'cart': {
-                'total_items': total_items,
-                'total_amount': str(total_amount),
-                'items': list(cart.values())
-            }
+            'cart': cart_data
         })
+        response['Content-Type'] = 'application/json'
+        return response
         
     except Exception as e:
         logger.error(f"Add to cart error: {str(e)}", exc_info=True)
         return JsonResponse({
             'success': False,
             'message': 'Something went wrong. Please try again.'
-        }, status=500)
+        }, status=500, content_type='application/json')
 
 @require_POST
 def remove_from_cart(request):
@@ -1110,88 +1124,81 @@ def verify_account(request):
 
 @ensure_csrf_cookie
 @csrf_protect
+@require_http_methods(["GET", "POST"])
 def register_view(request):
-    if request.method == 'POST':
-        max_retries = 3
-        retry_count = 0
-        
-        while retry_count < max_retries:
-            try:
-                with transaction.atomic():
-                    # Get form data
-                    phone = request.POST.get('phone')
-                    email = request.POST.get('email')
-                    name = request.POST.get('name')
-                    password = request.POST.get('password')
-                    
-                    # Check if user already exists
-                    if User.objects.filter(email=email).exists():
-                        return JsonResponse({
-                            'status': 'error',
-                            'message': 'Email already registered'
-                        })
+    """Handle user registration with GET and POST"""
 
-                    if User.objects.filter(profile__phone_number=phone).exists():
-                        return JsonResponse({
-                            'status': 'error',
-                            'message': 'Phone number already registered'
-                        })
+    if request.method == 'GET':
+        return render(request, 'store/register.html')
 
-                    # Split name into first_name and last_name
-                    full_name = request.POST.get('name', '').strip()
-                    names = full_name.split(' ', 1)
-                    first_name = names[0]
-                    last_name = names[1] if len(names) > 1 else ''
-                    
-                    # Create user with is_active=False
-                    user = User.objects.create_user(
-                        username=email,
-                        email=email,
-                        password=password,
-                        first_name=first_name,
-                        last_name=last_name,  # Add last name
-                        is_active=False
-                    )
-                    
-                    user.profile.phone_number = phone
-                    user.profile.save()
-                    
-                    # Store user_id in session
-                    request.session['registration_user_id'] = user.id
-                    
-                    # Send OTP
-                    if send_otp_email(email):
-                        return JsonResponse({
-                            'status': 'success',
-                            'redirect_url': reverse('store:verify_otp')
-                        })
-                    else:
-                        # Rollback will happen automatically due to transaction.atomic()
-                        raise ValidationError('Failed to send OTP')
+    try:
+        # Get data based on content type
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
 
-            except OperationalError as e:
-                if 'database is locked' in str(e) and retry_count < max_retries - 1:
-                    retry_count += 1
-                    time.sleep(retry_count)
-                    continue
-                raise
+        phone = data.get('phone')
+        email = data.get('email')
+        name = data.get('name')
+        password = data.get('password')
 
-            except ValidationError as ve:
-                logger.error(f"Validation error during registration: {str(ve)}")
+        # Validate required fields
+        if not all([phone, email, name, password]):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'All fields are required'
+            }, status=400)
+
+        # Check if user already exists
+        if User.objects.filter(username=email).exists() or User.objects.filter(email=email).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'A user with this email already exists'
+            }, status=400)
+
+        # Create user with is_active=False
+        with transaction.atomic():
+            names = name.split(' ', 1)
+            first_name = names[0]
+            last_name = names[1] if len(names) > 1 else ''
+
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=False
+            )
+
+            user.profile.phone_number = phone
+            user.profile.save()
+
+            # Store user ID in session for verification
+            request.session['registration_user_id'] = user.id
+            request.session['verification_user_id'] = user.id
+
+            # Send OTP
+            if send_otp_email(email):
                 return JsonResponse({
-                    'status': 'error',
-                    'message': str(ve)
-                }, status=400)
-            except Exception as e:
-                logger.error(f"Unexpected error during registration: {str(e)}")
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'An unexpected error occurred'
-                }, status=500)
-            
-            break  # If we get here, the transaction succeeded
-    
-    return render(request, 'store/register.html')
+                    'status': 'success',
+                    'redirect_url': reverse('store:verify_otp')
+                })
+            else:
+                raise ValidationError('Failed to send OTP')
+
+    except ValidationError as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Registration failed'
+        }, status=500)
 
 @ensure_csrf_cookie
 @csrf_protect
@@ -1313,57 +1320,40 @@ def resend_verification_codes(request):
             'message': 'An error occurred'
         }, status=500)
 
-def send_otp(request):
-    """Handle sending OTP"""
+def send_otp(email, otp_code=None):
+    """Send OTP via email"""
     try:
-        email = request.POST.get('email')
-        if not email:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Email is required'
-            })
-
-        # Generate OTP
-        otp_code = get_random_string(length=6, allowed_chars='0123456789')
-        expiry = timezone.now() + timezone.timedelta(minutes=10)
-
-        # Delete any existing unverified OTPs for this email
-        OTP.objects.filter(
-            email=email,
-            is_verified=False
-        ).delete()
-
-        # Create new OTP record
-        otp_record = OTP.objects.create(
-            email=email,
-            otp=otp_code,
-            expires_at=expiry
-        )
-
-        # Send OTP email
-        if send_otp_email(email, otp_code):
-            response = JsonResponse({
-                'status': 'success',
-                'message': 'OTP sent successfully'
-            })
+        # Generate OTP if not provided
+        if not otp_code:
+            otp_code = get_random_string(length=6, allowed_chars='0123456789')
             
-            # Store OTP in session instead of cookies for security
-            request.session['otp_data'] = {
-                'email': email,
-                'expires_at': expiry.isoformat()
-            }
-            return response
-
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Failed to send OTP'
-        })
+            # Delete any existing unverified OTPs for this email
+            OTP.objects.filter(
+                email=email,
+                is_verified=False
+            ).delete()
+            
+            # Create new OTP record
+            expiry = timezone.now() + timezone.timedelta(minutes=10)
+            OTP.objects.create(
+                email=email,
+                otp=otp_code,
+                expires_at=expiry
+            )
+        
+        # Send the email
+        send_mail(
+            subject='Your Verification Code',
+            message=f'Your verification code is: {otp_code}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        
+        return True
     except Exception as e:
-        logger.error(f"Error in send_otp: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Failed to send OTP'
-        })
+        logger.error(f"Error sending OTP email: {str(e)}")
+        return False
 
 def check_otp(email, otp_code):
     """New function to verify OTP correctly"""
@@ -1582,3 +1572,58 @@ def add_to_wishlist(request):
             'success': False,
             'message': 'Failed to update wishlist'
         }, status=500)
+
+from django.shortcuts import render
+
+def main_view(request):
+    """Landing page view using main.html"""
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'store/main.html', context)
+
+def shop_view(request):
+    """Shop view using previous home.html template"""
+    products = Product.objects.all().select_related('category')
+    
+    # Enhanced sorting logic
+    sort_option = request.GET.get('sort', 'default')
+    
+    # Apply sorting with proper handling
+    if sort_option and sort_option != 'default':
+        if sort_option == 'price-low-high':
+            products = products.order_by('price')
+        elif sort_option == 'price-high-low':
+            products = products.order_by('-price')
+
+    # Fetch categories
+    categories = Category.objects.all()
+    
+    # Price filter logic
+    max_price = products.aggregate(Max('price'))['price__max'] or 0
+    min_price = int(request.GET.get('min_price', 0))
+    max_price_range = int(request.GET.get('max_price', max_price))
+    filtered_products = products.filter(price__gte=min_price, price__lte=max_price_range)
+
+    # Pagination logic
+    page = int(request.GET.get('page', 1))
+    products_per_page = 9
+    paginator = Paginator(filtered_products, products_per_page)
+    try:
+        paginated_products = paginator.page(page)
+    except:
+        paginated_products = paginator.page(1)
+
+    context = {
+        'categories': categories,
+        'products': paginated_products,
+        'sort_option': sort_option,
+        'min_price': min_price,
+        'max_price': max_price_range,
+        'max_price_filtered': max_price,
+        'current_page': page,
+        'total_pages': paginator.num_pages
+    }
+    
+    return render(request, 'store/home.html', context)
