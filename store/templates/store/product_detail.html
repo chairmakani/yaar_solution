@@ -29,10 +29,12 @@
             <div class="main-image">
                 {% if product.primary_image and product.primary_image.image %}
                     <img id="main-product-image" 
+                         class="fade-image"
                          src="{{ product.primary_image.image.url }}" 
                          alt="{{ product.primary_image.alt_text|default:product.name }}">
                 {% else %}
-                    <img id="main-product-image" 
+                    <img id="main-product-image"
+                         class="fade-image"
                          src="{% static 'images/no-image.jpg' %}" 
                          alt="{{ product.name }}">
                 {% endif %}
@@ -42,8 +44,10 @@
             <div class="thumbnail-gallery">
                 {% for image in product.images.all %}
                     {% if image.image %}
-                        <div class="thumbnail {% if image.is_primary %}active{% endif %}" data-image="{{ image.image.url }}">
-                            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}">
+                        <div class="thumbnail {% if image.is_primary %}active{% endif %}" 
+                             data-image="{{ image.image.url }}">
+                            <img class="fade-image" src="{{ image.image.url }}" 
+                                 alt="{{ image.alt_text|default:product.name }}">
                         </div>
                     {% endif %}
                 {% endfor %}
@@ -159,8 +163,17 @@
                         {% if not product.has_variants and product.stock_status == 'out_of_stock' %}disabled{% endif %}>
                     <i class="icon-cart"></i> Add to Cart
                 </button>
-                <button id="add-to-wishlist" class="btn secondary-btn">
-                    <i class="icon-heart"></i> Save for Later
+                <button id="add-to-wishlist" class="btn secondary-btn" 
+                        {% if not user.is_authenticated %}
+                        data-requires-auth="true"
+                        title="Login required to save items"
+                        {% endif %}>
+                    <i class="icon-heart"></i> 
+                    {% if user.is_authenticated %}
+                        Save for Later
+                    {% else %}
+                        Login to Save
+                    {% endif %}
                 </button>
             </div>
             
@@ -298,10 +311,6 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const productManager = new ProductManager(stockConfig);
-            const quantityController = new QuantityController(stockConfig);
-        });
     </script>
 {% endblock %}
 

@@ -165,6 +165,97 @@ class CartManager {
         }
     }
 
+    async makeRequest(url, options = {}) {
+        try {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken,
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            };
+
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            
+            if (response.status === 403) {
+                console.warn('Authentication required or permission denied');
+                return { success: false, message: 'Permission denied' };
+            }
+
+            if (!response.ok) {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    // Handle HTML response (likely an error page)
+                    return { success: false, message: 'Server returned an error page' };
+                }
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Server error');
+                }
+                throw new Error('Network response was not ok');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return { success: false, message: 'Invalid response format' };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Request failed:', error);
+            return { success: false, message: error.message || 'Request failed' };
+        }
+    }
+
+    updateQuantity(input, change, maxStock) {
+        if (!input) return;
+        
+        const currentValue = parseInt(input.value) || 1;
+        const newValue = Math.max(1, Math.min(currentValue + change, maxStock));
+        
+        if (currentValue !== newValue) {
+            input.value = newValue;
+            
+            // Add visual feedback
+            input.classList.add('quantity-changed');
+            setTimeout(() => input.classList.remove('quantity-changed'), 300);
+            
+            // Update button states
+            this.updateQuantityButtonStates(input);
+            
+            // Trigger change event
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    validateQuantity(input, maxStock) {
+        if (!input) return;
+        
+        let value = parseInt(input.value) || 1;
+        value = Math.max(1, Math.min(value, maxStock));
+        input.value = value;
+        
+        this.updateQuantityButtonStates(input);
+    }
+
+    updateQuantityButtonStates(input) {
+        const container = input.closest('.quantity-selector');
+        if (!container) return;
+        
+        const decreaseBtn = container.querySelector('.decrease');
+        const increaseBtn = container.querySelector('.increase');
+        const currentValue = parseInt(input.value);
+        const maxStock = parseInt(input.dataset.maxStock);
+        
+        if (decreaseBtn) {
+            decreaseBtn.disabled = currentValue <= 1;
+        }
+        if (increaseBtn) {
+            increaseBtn.disabled = currentValue >= maxStock;
+        }
+    }
+
     // ... Helper methods ...
 
     updatePriceDisplay(price) {
@@ -253,60 +344,6 @@ class CartManager {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         });
-    }
-
-    async makeRequest(url, options = {}) {
-        try {
-            const defaultOptions = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.csrfToken,
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin'
-            };
-
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            
-            if (!response.ok) {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Server error');
-                }
-                throw new Error('Network response was not ok');
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Invalid response format');
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Request failed:', error);
-            throw error;
-        }
-    }
-
-    // ... existing helper methods ...
-
-    updateQuantity(input, change, maxStock) {
-        if (!input) return;
-        let currentQty = parseInt(input.value) || 1;
-
-        currentQty = Math.max(1, Math.min(currentQty + change, maxStock));
-        input.value = currentQty;
-
-        // Animation for visual feedback
-        input.classList.add('changed');
-        setTimeout(() => input.classList.remove('changed'), 300);
-    }
-
-    validateQuantity(input, maxStock) {
-        let currentQty = parseInt(input.value) || 1;
-        currentQty = Math.max(1, Math.min(currentQty, maxStock));
-        input.value = currentQty;
     }
 
     async handleSuccessfulAdd(button, response) {
@@ -407,15 +444,55 @@ class CartManager {
     }
 
     setupStockMonitoring() {
-        // Poll for stock updates every 30 seconds
-        setInterval(() => this.checkStockUpdates(), 30000);
-        
-        // Listen for page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                this.checkStockUpdates();
+        const pollInterval = 30000; // 30 seconds
+        let timeoutId = null;
+
+        const checkStock = async () => {
+            try {
+                const productElements = document.querySelectorAll('[data-product-id]');
+                if (productElements.length === 0) {
+                    return; // No products to check
+                }
+
+                const response = await this.makeRequest('/api/stock/check/', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        product_ids: Array.from(productElements)
+                            .map(el => el.dataset.productId)
+                    })
+                });
+
+                if (response.success && Array.isArray(response.stock_data)) {
+                    this.updateStockUI(response.stock_data);
+                }
+            } catch (error) {
+                console.warn('Stock check failed:', error);
+            } finally {
+                // Schedule next check only if page is visible
+                if (document.visibilityState === 'visible') {
+                    timeoutId = setTimeout(checkStock, pollInterval);
+                }
             }
-        });
+        };
+
+        // Start monitoring only if products exist on page
+        if (document.querySelectorAll('[data-product-id]').length > 0) {
+            checkStock();
+
+            // Handle page visibility changes
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    if (!timeoutId) {
+                        checkStock();
+                    }
+                } else {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+                }
+            });
+        }
     }
 
     async checkStockUpdates() {

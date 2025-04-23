@@ -14,3 +14,7 @@
     margin: 0;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+.grid-view .product-card {
+    max-height: 380px;
+}

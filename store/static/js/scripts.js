@@ -97,5 +97,13 @@ class SiteManager {
 // Initialize site manager
 document.addEventListener('DOMContentLoaded', () => {
     window.siteManager = new SiteManager();
+
+    // Defensive programming - check if elements exist before adding listeners
+    const element = document.querySelector('.target-element');
+    if (element) {
+        element.addEventListener('click', function() {
+            // ... existing code ...
+        });
+    }
 });
 

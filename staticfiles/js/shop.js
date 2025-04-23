@@ -85,52 +85,22 @@ class ShopManager {
     }
 
     initLazyLoading() {
-        if ('loading' in HTMLImageElement.prototype) {
-            // Use native lazy loading
-            document.querySelectorAll('img.lazy-image').forEach(img => {
-                if (img.dataset.src) {
-                    img.src = img.dataset.src;
-                }
-            });
-        } else {
-            // Fallback to Intersection Observer
+        if ('IntersectionObserver' in window) {
             const imageObserver = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const img = entry.target;
-                        if (img.dataset.src) {
-                            this.loadImageWithRetry(img, 3);
-                        }
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy-image');
                         observer.unobserve(img);
                     }
                 });
-            }, {
-                rootMargin: '50px 0px'
             });
 
-            document.querySelectorAll('img.lazy-image').forEach(img => {
+            document.querySelectorAll('.lazy-image').forEach(img => {
                 imageObserver.observe(img);
             });
         }
-    }
-
-    loadImageWithRetry(img, retries) {
-        const loadImage = () => {
-            img.src = img.dataset.src;
-            return new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-            });
-        };
-
-        loadImage().catch(error => {
-            if (retries > 0) {
-                setTimeout(() => this.loadImageWithRetry(img, retries - 1), 1000);
-            } else {
-                img.src = '{% static "images/no-image.jpg" %}';
-                img.classList.add('load-error');
-            }
-        });
     }
 
     initSearchHandlers() {

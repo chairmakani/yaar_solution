@@ -240,4 +240,41 @@ Home
 <script src="{% static 'js/shop.js' %}"></script>
 <script src="{% static 'js/cart-manager.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('price-slider');
+    if (slider && !slider.noUiSlider) {  // Check if slider exists and not already initialized
+        try {
+            noUiSlider.create(slider, {
+                start: [{{ min_price|default:0 }}, {{ max_price|default:100 }}],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': {{ max_price_filtered|default:100 }}
+                },
+                format: {
+                    to: value => Math.round(value),
+                    from: value => Math.round(value)
+                }
+            });
+
+            // Connect slider to inputs
+            const minPriceInput = document.getElementById('min-price');
+            const maxPriceInput = document.getElementById('max-price');
+
+            if (minPriceInput && maxPriceInput) {
+                slider.noUiSlider.on('update', function (values, handle) {
+                    if (handle === 0) {
+                        minPriceInput.value = values[handle];
+                    } else {
+                        maxPriceInput.value = values[handle];
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('Price slider initialization failed:', error);
+        }
+    }
+});
+</script>
 {% endblock extra_js %}

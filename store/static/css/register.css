@@ -7,6 +7,9 @@
     --transition: all 0.3s ease;
 }
 
+.main-content-wrapper{
+    top:15px;
+}
 .register-container {
     min-height: calc(100vh - var(--navbar-height));
     display: flex;
@@ -612,3 +615,4 @@
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(31, 110, 46, 0.3);
 }
+

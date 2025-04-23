@@ -13,12 +13,12 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     {% csrf_token %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
     <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
-    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <title>{% block title %}{% endblock title%}</title>
     <style>
     
@@ -35,6 +35,7 @@
         
         {% block extra_css %}
         <link rel="stylesheet" href="{% static 'css/cart-animations.css' %}">
+        <link rel="stylesheet" href="{% static 'css/footer.css' %}">
         <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
         {% endblock extra_css %}
         {% block content %}
@@ -319,17 +320,18 @@
                     </div>
                 </div>
                 <div class="fssai-logo">
-                    <img src="{% static 'images/fssai logo.jpg' %}" alt="fssai logo">
+                    <img src="{% static 'images/Fssai_Logo.jpg' %}" 
+                         alt="FSSAI logo">
                 </div>
                 
                 <div class="info">
                     <h3>Address</h3><br>
                     <p><span class="address-part">Yaar Solution,No.175c/6, Munthal Road, Punnaiyapuram,</span> 
                        <span class="address-part">Puliyankudi, Tenkasi Dt.-627 751. Tamilnadu</span></p>
-                    <p>Phone: +91 9488674103</p>
-                    <p>www.yaar.co.in</p>
+                    <p>Phone: <a href="tel:+919488674103">+91 9488674103</a></p>
+                    <p><a href="https://www.yaar.co.in" target="_blank">www.yaar.co.in</a></p>
                 </div>
-                <p class="email-contact"><i class="fa-solid fa-envelope"></i> yaarsolutions@gmail.com</p>
+                <p class="email-contact"><i class="fa-solid fa-envelope"></i> <a href="mailto:yaarsolution@gmail.com">yaarsolution@gmail.com</a></p>
                 <div class="icon">
                     <p><a href="https://g.co/kgs/TVhzyut" target="_blank"><i class="fa-brands fa-google" style="color: blue;"></i></a></p>
                     <p><a href="https://www.instagram.com/yaarsolutions/" target="_blank"><i class="fa-brands fa-square-instagram" style="color:rgb(212, 62, 90);"></i></a></p>

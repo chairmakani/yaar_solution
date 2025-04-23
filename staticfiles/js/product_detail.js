@@ -179,15 +179,41 @@ document.addEventListener('DOMContentLoaded', function() {
         thumbnail.addEventListener('click', function() {
             if (!mainImage) return;
             
-            // Update active thumbnail
+            // Update active state
             thumbnails.forEach(thumb => thumb.classList.remove('active'));
             this.classList.add('active');
             
-            // Update main image
+            // Get new image URL
             const imageUrl = this.dataset.image;
-            mainImage.src = imageUrl;
+            
+            // Add loading class to main image container
+            mainImage.classList.add('loading');
+            mainImage.classList.add('fade-out');
+            
+            // Create new image object to preload
+            const newImage = new Image();
+            newImage.onload = function() {
+                // Once new image is loaded, update main image
+                mainImage.src = imageUrl;
+                mainImage.classList.remove('fade-out');
+                mainImage.classList.add('fade-in');
+                
+                // Clean up classes after transition
+                mainImage.addEventListener('transitionend', function handler() {
+                    mainImage.classList.remove('fade-in', 'loading');
+                    mainImage.removeEventListener('transitionend', handler);
+                });
+            };
+            newImage.src = imageUrl;
         });
     });
+
+    // Add image loading handler
+    if (mainImage) {
+        mainImage.addEventListener('load', function() {
+            this.classList.remove('loading');
+        });
+    }
 
     // Tab system
     tabButtons.forEach(button => {
@@ -233,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function addToWishlist(productId, variantId) {
-        // Get CSRF token for Django
         const csrfToken = getCookie('csrftoken');
         
         // Prepare data
@@ -250,26 +275,39 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
+                'X-CSRFToken': csrfToken,
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            // Check if redirected to login page
+            if (response.redirected || response.url.includes('login')) {
+                window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+                return;
             }
-            return response.json();
+            
+            // Check content type
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            }
+            throw new Error('Invalid response format');
         })
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 showNotification('Product saved to your wishlist!', 'success');
             } else {
-                showNotification(data.message || 'Failed to add product to wishlist.', 'error');
+                throw new Error(data.message || 'Failed to add product to wishlist.');
             }
         })
         .catch(error => {
             console.error('Error adding to wishlist:', error);
-            showNotification('There was a problem saving this item.', 'error');
+            if (error.message.includes('Invalid response format')) {
+                showNotification('Please login to add items to wishlist', 'warning');
+            } else {
+                showNotification(error.message || 'There was a problem saving this item.', 'error');
+            }
         });
     }
     
