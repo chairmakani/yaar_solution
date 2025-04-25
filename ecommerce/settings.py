@@ -37,7 +37,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 # CORS Settings
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_ALL_ORIGINS = False  # For development only
 CORS_ALLOW_METHODS = [
     'GET',
     'POST',
@@ -65,7 +65,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CSRF_COOKIE_SECURE = True  # Only send over HTTPS
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access
+CSRF_COOKIE_HTTPONLY = True  # Allow JavaScript access
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_DOMAIN = '.yaar.co.in'  # Include subdomains
 CSRF_USE_SESSIONS = False  # Store CSRF in cookie rather than session
