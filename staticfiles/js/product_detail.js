@@ -37,14 +37,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     };
-    
-    // Initialize with default selected variant if product has variants
-    if (hasVariants && variantButtons.length > 0) {
-        const defaultSelected = document.querySelector('.variant-btn.selected');
-        if (defaultSelected) {
-            selectedVariantId = defaultSelected.dataset.variantId;
-            updateVariantInfo(defaultSelected);
+
+    function initializeProduct() {
+        // Initialize default variant if exists
+        if (hasVariants && variantButtons.length > 0) {
+            const defaultSelected = document.querySelector('.variant-btn.selected');
+            if (defaultSelected) {
+                selectedVariantId = defaultSelected.dataset.variantId;
+                updateVariantInfo(defaultSelected);
+            }
         }
+
+        // Initialize quantity buttons
+        updateQuantityButtonStates();
+        initializeTabs();
     }
 
     // Variant button click handlers
@@ -68,58 +74,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const stock = parseInt(variantButton.dataset.stock);
         const sku = variantButton.dataset.sku;
         
-        // Update price display - Fix for priceDisplay error
-        const priceDisplays = [
-            document.getElementById('variant-price'),
-            document.querySelector('.product-pricing .price')
-        ];
-        
-        priceDisplays.forEach(display => {
-            if (display) {
-                display.textContent = `₹${price}`;
-            }
+        // Update price display
+        document.querySelectorAll('.price').forEach(el => {
+            el.textContent = `₹${price}`;
         });
         
-        // Update stock status
+        // Update stock status and button states
+        updateStockStatus(stock);
+        updateAddToCartState(stock);
+        updateQuantityLimits(stock);
+    }
+
+    function updateStockStatus(stock) {
         const stockStatus = document.getElementById('variant-stock-status');
-        if (stockStatus) {
-            if (stock > 0) {
-                const threshold = productInfo?.dataset.stockThreshold || 10;
-                if (stock <= threshold) {
-                    stockStatus.textContent = `Only ${stock} left!`;
-                    stockStatus.className = 'low-stock';
-                } else {
-                    stockStatus.textContent = 'In Stock';
-                    stockStatus.className = 'in-stock';
-                }
-            } else {
-                stockStatus.textContent = 'Out of Stock';
-                stockStatus.className = 'out-of-stock';
-            }
-        }
-        
-        // Update SKU and other info
-        const skuDisplay = document.getElementById('variant-sku');
-        if (skuDisplay) {
-            skuDisplay.textContent = sku;
-        }
-        
-        // Update add to cart button state and quantity limits
-        maxStockQuantity = stock;
+        if (!stockStatus) return;
+
+        stockStatus.className = getStockStatusClass(stock);
+        stockStatus.textContent = getStockStatusText(stock);
+    }
+
+    function getStockStatusClass(stock) {
+        if (stock <= 0) return 'out-of-stock';
+        if (stock <= stockThreshold) return 'low-stock';
+        return 'in-stock';
+    }
+
+    function getStockStatusText(stock) {
+        if (stock <= 0) return 'Out of Stock';
+        if (stock <= stockThreshold) return `Only ${stock} left!`;
+        return 'In Stock';
+    }
+
+    function updateAddToCartState(stock) {
         if (addToCartBtn) {
             addToCartBtn.disabled = stock <= 0;
-        }
-        
-        if (quantityInput) {
-            quantityInput.max = stock;
-            const currentQty = parseInt(quantityInput.value);
-            if (currentQty > stock) {
-                quantityInput.value = Math.max(1, stock);
-            }
-            updateQuantityButtonStates();
+            addToCartBtn.title = stock <= 0 ? 'Out of stock' : 'Add to cart';
         }
     }
-    
+
+    function updateQuantityLimits(stock) {
+        if (!quantityInput) return;
+        
+        maxStockQuantity = stock;
+        quantityInput.max = stock;
+        
+        const currentQty = parseInt(quantityInput.value);
+        if (currentQty > stock) {
+            quantityInput.value = Math.max(1, stock);
+        }
+        
+        updateQuantityButtonStates();
+    }
+
     // Add helper function for quantity button states
     function updateQuantityButtonStates() {
         if (!quantityInput) return;
@@ -311,13 +317,78 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function handleResponse(response) {
+        if (response.redirected) {
+            window.location.href = response.url;
+            return Promise.reject('Redirecting...');
+        }
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                return Promise.reject('CSRF verification failed. Please refresh the page.');
+            }
+            return response.json().then(data => Promise.reject(data.message || `Error: ${response.status}`));
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return Promise.reject('Invalid response format');
+        }
+        
+        return response.json();
+    }
+
+    function handleSuccess(data) {
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to add to cart');
+        }
+
+        // Dispatch cart updated event
+        document.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: {
+                total_items: data.cart.total_items,
+                total_amount: data.cart.total_amount
+            }
+        }));
+        
+        showNotification('Added to cart successfully!', 'success');
+        updateCartDisplay(data.cart.total_items, data.cart.total_amount);
+    }
+
+    function handleError(error) {
+        console.error('Error adding to cart:', error);
+        showNotification(error.message || 'An error occurred while adding to cart.', 'error');
+        if (addToCartBtn) {
+            addToCartBtn.disabled = false;
+            addToCartBtn.innerHTML = '<i class="icon-cart"></i> Add to Cart';
+        }
+    }
+
     function addToCart(productId, variantId, quantity) {
-        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || getCookie('csrftoken');
-        const data = {
-            product_id: parseInt(productId),
-            quantity: parseInt(quantity),
-            variant_id: variantId ? parseInt(variantId) : null
-        };
+        // Validate stock before making request
+        const maxStock = variantId ? 
+            document.querySelector(`[data-variant-id="${variantId}"]`)?.dataset.stock : 
+            maxStockQuantity;
+
+        if (quantity > maxStock) {
+            showNotification(`Only ${maxStock} items available`, 'warning');
+            return;
+        }
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('#csrf-container [name="csrfmiddlewaretoken"]')?.value 
+            || getCookie('csrftoken');
+
+        if (!csrfToken) {
+            showNotification('Security token not found. Please refresh the page.', 'error');
+            return;
+        }
+
+        // Disable button and show loading state
+        if (addToCartBtn) {
+            addToCartBtn.disabled = true;
+            addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        }
 
         fetch('/api/cart/add/', {
             method: 'POST',
@@ -326,31 +397,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRFToken': csrfToken,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify({
+                product_id: parseInt(productId),
+                quantity: parseInt(quantity),
+                variant_id: variantId ? parseInt(variantId) : null
+            }),
             credentials: 'same-origin'
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Dispatch cart update event
-                const event = new CustomEvent('cartUpdated', {
-                    detail: {
-                        total_items: data.cart.total_items,
-                        total_amount: data.cart.total_amount,
-                        items: data.cart.items
-                    }
-                });
-                document.dispatchEvent(event);
-                
-                showNotification('Product added to cart!', 'success');
-                updateCartDisplay(data.cart.total_items, data.cart.total_amount);
-            } else {
-                throw new Error(data.message || 'Failed to add product to cart.');
+        .then(response => handleResponse(response))
+        .then(data => handleSuccess(data))
+        .catch(error => handleError(error))
+        .then(() => {
+            // Reset button state
+            if (addToCartBtn) {
+                addToCartBtn.disabled = false;
+                addToCartBtn.innerHTML = '<i class="icon-cart"></i> Add to Cart';
             }
-        })
-        .catch(error => {
-            console.error('Error adding to cart:', error);
-            showNotification(error.message || 'There was a problem adding this item to your cart.', 'error');
         });
     }
 
@@ -427,11 +489,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getCookie(name) {
         let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
                 }
@@ -500,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return icons[type] || icons.info;
     }
     
-    // Initialize the tabs on page load
-    initializeTabs();
+    // Initialize the product
+    initializeProduct();
 });
 

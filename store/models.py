@@ -674,3 +674,15 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.activity_type} - {self.timestamp}"
+
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    company = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return f"{self.name} - {self.subject}"

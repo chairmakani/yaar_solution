@@ -636,6 +636,8 @@
     border-radius: var(--border-radius);
     overflow: hidden;
     margin-bottom: 10px;
+    margin: 0 auto 10px auto;
+    width: fit-content;
   }
   
   .qty-btn {
@@ -659,13 +661,37 @@
   .qty-btn i {
     color: var(--dark-gray);
   }
-  
+
+  .qty-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--light-gray);
+  }
+
+  .qty-btn.disabled:hover {
+    background-color: var(--light-gray);
+    transform: none;
+  }
+
+  .qty-btn.disabled i {
+    color: var(--dark-gray);
+  }
+
   .quantity-input {
-    flex: 1;
-    border: none;
+    -moz-appearance: textfield;
     text-align: center;
     font-size: 14px;
-    outline: none;
+    border: none;
+    background: none;
+    width: 40px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .quantity-input::-webkit-outer-spin-button,
+  .quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
   
   /* Stock Status */
@@ -673,9 +699,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 15px;
+    margin: 10px 0;
     font-size: 14px;
-    transition: all var(--transition-fast);
   }
   
   .stock-status:hover .stock-indicator {
@@ -683,8 +708,8 @@
   }
   
   .stock-indicator {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
   }
   
@@ -710,6 +735,19 @@
   
   .out-of-stock .stock-text {
     color: var(--danger-color);
+  }
+  
+  .add-to-cart-btn.disabled {
+    background-color: var(--light-gray);
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none;
+    transition: all var(--transition-fast);
+  }
+  
+  .add-to-cart-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
   }
   
   /* Sale Badge */
@@ -1031,10 +1069,10 @@
   }
   
   .cart-count.bounce {
-    animation: bounceEffect 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cartBounce 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  @keyframes bounceEffect {
+  @keyframes cartBounce {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.3); }
   }
@@ -1676,32 +1714,26 @@
 
 /* Out of Stock Styles */
 .out-of-stock-message {
-    color: var(--danger-color);
-    font-weight: 500;
-    padding: 8px 12px;
-    background-color: rgba(231, 76, 60, 0.1);
-    border-radius: var(--border-radius);
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: var(--border-radius);
+    color: var(--danger-color);
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .out-of-stock-message i {
     font-size: 16px;
 }
 
-.add-to-cart-btn.disabled {
-    background-color: var(--light-gray);
-    cursor: not-allowed;
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-.add-to-cart-btn.disabled:hover {
-    transform: none;
-    box-shadow: none;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive adjustments for out of stock */
@@ -1796,5 +1828,69 @@
     .cart-notification i {
         font-size: 18px;
     }
+}
+
+/* Cart Notification Styles */
+.notifications-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cart-notification {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 12px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 280px;
+}
+
+.cart-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.cart-notification i {
+    font-size: 20px;
+}
+
+.cart-notification.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.cart-notification.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.cart-notification.success i {
+    color: var(--success-color);
+}
+
+.cart-notification.error i {
+    color: var(--danger-color);
+}
+
+/* Cart Count Animation */
+.cart-count {
+    animation: none;
+}
+
+.cart-count.bounce {
+    animation: cartBounce 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cartBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
 }
 

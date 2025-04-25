@@ -20,14 +20,34 @@ function setupCSRFToken() {
     }
 }
 
+// Add this function
+function addCSRFToken(headers = {}) {
+    const token = getCSRFToken();
+    if (token) {
+        return {
+            ...headers,
+            'X-CSRFToken': token,
+            'Content-Type': 'application/json'
+        };
+    }
+    return headers;
+}
+
 // Add CSRF token to fetch requests
 function fetchWithCSRF(url, options = {}) {
     const token = getCSRFToken();
+    if (!token) {
+        console.error('CSRF token not found');
+        throw new Error('CSRF token not found');
+    }
+
     return fetch(url, {
         ...options,
+        credentials: 'same-origin',
         headers: {
             ...options.headers,
             'X-CSRFToken': token,
-        },
+            'Accept': 'application/json'
+        }
     });
 }

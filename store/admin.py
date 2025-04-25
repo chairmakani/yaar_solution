@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Product, Category, NGO, Location, ProductVariant, 
     VariantType, ProductImage, UnitType , Order , OrderItem ,
+    ContactMessage,
 )
 
 class ProductVariantInline(admin.TabularInline):
@@ -158,4 +159,24 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ['order', 'product', 'quantity', 'price', 'total']
     search_fields = ['order__order_number', 'product__name']
 
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'company', 'email', 'subject', 'created_at')
+    list_filter = ('created_at', 'company')
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',)
 
+    fieldsets = (
+        ('Contact Information', {
+            'fields': ('name', 'company', 'phone', 'email')
+        }),
+        ('Message Details', {
+            'fields': ('subject', 'message')
+        }),
+        ('System Fields', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )

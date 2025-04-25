@@ -616,3 +616,17 @@
     box-shadow: 0 5px 15px rgba(31, 110, 46, 0.3);
 }
 
+/* Error Styles */
+.error-container {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+    color: #c62828;
+}
+
+.error-container .error-message {
+    margin: 0;
+    font-size: 14px;
+}

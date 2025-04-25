@@ -4,7 +4,7 @@
 <head>
     {% load static %}
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{% static 'images/placeholder.png' %}">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
     <meta charset="UTF-8">
@@ -12,13 +12,13 @@
     <!-- Add CSRF token meta tag -->
     <meta name="csrf-token" content="{{ csrf_token }}">
     {% csrf_token %}
-    <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
+    <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
     <title>{% block title %}{% endblock title%}</title>
     <style>
     
@@ -29,7 +29,6 @@
     <div class="content-loader">
         <!-- Add this right after <body> tag -->
         <div id="notification-container" class="notification-container"></div>
-        <div id="cart-notifications" class="notifications-container"></div>
         <form id="csrf-form" style="display:none">
             {% csrf_token %}
         </form>
@@ -54,10 +53,7 @@
             <div class="search-container">
                 <form action="{% url 'store:product_search' %}" method="GET" class="search-form" id="search-form-big">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="query" id="search-box-big" placeholder="Search for products..." autocomplete="off">
-                    <div class="search-suggestions" id="search-suggestions-big">
-                        <!-- This will be populated by JavaScript -->
-                    </div>
+                    <input type="text" name="query" id="search-box-big" placeholder="Search for products...">
                 </form>
                 <div class="search-results" id="search-results-big"></div>
             </div>
@@ -157,7 +153,7 @@
                     <li class="dropdown-ngos">
                         <a href="#">
                             <span>NGOs</span>
-                            <span class="dropdown-icon"></span>
+                            <span class="dropdown-icon">&#x25BC;</span>
                         </a>
                         <ul class="dropdown-menu-ngos">
                             {% for location, ngos in ngo_menu.items %}
@@ -183,52 +179,15 @@
             </ul>
         </nav>
         <!-- Search Bar small screen-->
-        <div class="mobile-search-wrapper" id="mobile-search-wrapper">
-            <form action="{% url 'store:product_search' %}" method="GET" class="mobile-search-form">
-                <input 
-                    type="text" 
-                    name="query" 
-                    id="mobile-search-input"
-                    class="mobile-search-input" 
-                    placeholder="Search products, categories..." 
-                    autocomplete="off"
-                >
-                <button type="submit" class="mobile-search-submit">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button 
-                    type="button" 
-                    id="mobile-search-close"
-                    class="mobile-search-close"
-                >
-                    <i class="fas fa-times"></i>
-                </button>
+        <div class="search-bar-container" id="search-bar">
+            <form action="{% url 'store:product_search' %}" method="GET" id="search-form-mobile" onsubmit="return handleSearch(event, 'search-bar-mobile')">
+                <input type="text" name="query" id="search-bar-mobile" placeholder="Search for products...">
+                <i class="fas fa-times cancel-btn" id="cancel-search"></i>
+                <button type="submit" id="search-submit-mobile">Search</button>
             </form>
-            <div class="mobile-search-results" id="mobile-search-results"></div>
+            <div class="search-results" id="search-results-mobile"></div>
         </div>
-
-        <style>
-            .mobile-suggestions-image {
-                width: 60px;
-                height: 60px;
-                object-fit: cover;
-                border-radius: 4px;
-                margin-right: 10px;
-            }
-            
-            .mobile-search-results .suggestion-item {
-                display: flex;
-                align-items: center;
-                padding: 8px;
-                text-decoration: none;
-                color: inherit;
-            }
-            
-            .mobile-search-results .suggestion-details {
-                flex: 1;
-            }
-        </style>
-
+        
         <!-- Sidebar -->
         <div class="menu-sidebar" id="menu-sidebar">
             <span class="close-btn" id="close-sidebar">&times;</span>
@@ -296,14 +255,14 @@
                             <li><a href="{% url 'store:login' %}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                             <li><a href="{% url 'store:register' %}"><i class="fas fa-user-plus"></i> Register</a></li>
                         {% endif %}
-                        <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone"></i> Contact Us</a></li>
+                        <li><a href="#"><i class="fas fa-phone"></i> Contact Us</a></li>
                     </ul>
                 </div>
             </div>
             <!-- Sidebar Footer -->
             <div class="sidebar-footer">
-                <a href="https://wa.me/+918925453384" target="_blank"><i class="fa-brands fa-whatsapp" style="color: lightgreen;"></i> WhatsApp</a>
-                <a href="https://www.instagram.com/yaarsolutions/" target="_blank"><i class="fa-brands fa-square-instagram" style="color:rgb(212, 62, 90);"></i> Instagram</a>
+                <a href="#">WhatsApp</a>
+                <a href="#">Twitter</a>
             </div>
         </div>
 
@@ -380,14 +339,14 @@
                     <p><a href="https://www.linkedin.com/company/yaarsolutions/" target="_blank"><i class="fa-brands fa-linkedin" style="color:rgb(48, 162, 238);"></i></a></p>
                     <p><a href="https://youtube.com/@yaarsolutions?si=Yoauh-yJ6revii2Q" target="_blank"><i class="fa-brands fa-youtube" style="color: red;"></i></a></p>
                     <p><a href="https://www.facebook.com/yaarsolutions" target="_blank"><i class="fa-brands fa-facebook" style="color:rgb(28, 76, 181);"></i></a></p>
-                    <p><a href="https://wa.me/+918925453384" target="_blank"><i class="fa-brands fa-whatsapp" style="color: green;"></i></a></p>
+                    <p><a href="https://wa.me/+919488674103" target="_blank"><i class="fa-brands fa-whatsapp" style="color: green;"></i></a></p>
                 </div>
                 
                 <div class="policy-links">
-                    <a href="{% url 'store:privacy-policy' %}">Privacy Policy</a>
-                    <a href="{% url 'store:shipping-policy' %}">Shipping Policy</a>
-                    <a href="{% url 'store:terms-policy' %}">Terms Policy</a>
-                    <a href="{% url 'store:return-and-cancellation-policy' %}">Return and Cancellation Policy</a>
+                    <a href="{% url 'store:privacy_policy' %}">Privacy Policy</a>
+                    <a href="{% url 'store:shipping_policy' %}">Shipping Policy</a>
+                    <a href="{% url 'store:terms_policy' %}">Terms Policy</a>
+                    <a href="{% url 'store:return_and_cancellation_policy' %}">Return and Cancellation Policy</a>
                 </div>
             </div>
             <br><br><br>
@@ -399,15 +358,10 @@
             {% endblock content4 %}
         </div>
 
-        
-
         <!-- Fixed Action Buttons -->
-
-       
-        <a href="https://wa.me/+918925453384" class="whatsapp-btn hidden" aria-label="Contact on WhatsApp" target="_blank">
+        <a href="https://wa.me/+919488674103" class="whatsapp-btn hidden" aria-label="Contact on WhatsApp" target="_blank">
             <i class="fab fa-whatsapp"></i>
         </a>
-
         <!-- Add Scroll to Top Button -->
 
         <button class="scroll-top-btn" aria-label="Scroll to top">
@@ -416,321 +370,246 @@
             </svg>
         </button>
 
-        <!-- Add these before your scripts -->
+        {% block extra_js %}
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script src="{% static 'js/csrf.js' %}"></script>
         <script src="{% static 'js/scripts.js' %}"></script>
         <script src="{% static 'js/search.js' %}"></script>
         <script src="{% static 'js/cart.js' %}"></script>
-        <script src="{% static 'js/whatsapp-button.js' %}"></script>
         <script src="{% static 'js/base.js' %}"></script>
         <script src="{% static 'js/footer.js' %}"></script>
-
-        {% block extra_js %}
-        <script src="{% static 'js/loader.js' %}"></script>
+        <script src="{% static 'js/whatsapp-button.js' %}"></script>
         <script src="{% static 'js/cart-state.js' %}"></script>
         <script src="{% static 'js/quantity-manager.js' %}"></script>
         <script src="{% static 'js/cart-animations.js' %}"></script>
-        <script src="{% static 'js/csrf.js' %}"></script>
+        <script src="{% static 'js/loader.js' %}"></script>
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Function to update cart UI
-            function updateCartDisplay(cartData) {
-                // Update cart count and total
-                const cartCount = document.getElementById('cart-count');
-                const cartTotal = document.getElementById('cart-total');
-                const subtotalAmount = document.querySelector('.subtotal-amount');
-                
-                if (cartCount) {
-                    cartCount.classList.remove('bounce');
-                    void cartCount.offsetWidth; // Trigger reflow
-                    cartCount.classList.add('bounce');
-                    cartCount.textContent = cartData.total_items;
-                }
-                
-                if (cartTotal) {
-                    cartTotal.textContent = `₹${cartData.total_amount}`;
-                }
-
-                if (subtotalAmount) {
-                    subtotalAmount.textContent = `₹${cartData.total_amount}`;
-                }
-            }
-
-            // Function to show notifications
-            function showNotification(message, type = 'success') {
-                NotificationManager.show(message, type);
-            }
-
-            // Listen for custom cart update events
-            document.addEventListener('cartUpdated', function(e) {
-                updateCartDisplay(e.detail);
-            });
-
-            // Make functions globally available
-            window.updateCartDisplay = updateCartDisplay;
-            window.showNotification = showNotification;
-        });
-
-        // Global notification manager
-        window.NotificationManager = {
-            container: document.getElementById('notification-container'),
-            
-            show: function(message, type = 'success', duration = 3000) {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                
-                notification.innerHTML = `
-                    <div class="notification-content">
-                        <div class="notification-icon">
-                            <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                                          type === 'warning' ? 'exclamation-triangle' : 
-                                          'exclamation-circle'}"></i>
-                        </div>
-                        <div class="notification-text">
-                            <p class="notification-title">
-                                ${type.charAt(0).toUpperCase() + type.slice(1)}
-                            </p>
-                            <p class="notification-message">${message}</p>
-                        </div>
-                    </div>
-                `;
-
-                this.container.appendChild(notification);
-                
-                // Trigger entrance animation
-                requestAnimationFrame(() => {
-                    notification.classList.add('show');
-                });
-
-                // Remove notification after duration
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => notification.remove(), 300);
-                }, duration);
-            }
-        };
-
-        // Update existing showNotification function to use NotificationManager
-        window.showNotification = function(message, type) {
-            NotificationManager.show(message, type);
-        };
-
-        // Global cart update handler
-        window.updateCartUI = function(cartData) {
-            const counts = document.querySelectorAll('.cart-count');
-            const totals = document.querySelectorAll('.cart-total');
-            const mobileCount = document.getElementById('mobile-cart-count');
-            
-            const formattedTotal = new Intl.NumberFormat('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                minimumFractionDigits: 2
-            }).format(cartData.total_amount);
-
-            counts.forEach(count => {
-                count.textContent = cartData.total_items;
-                count.classList.add('bounce');
-                setTimeout(() => count.classList.remove('bounce'), 1000);
-            });
-
-            totals.forEach(total => {
-                total.textContent = formattedTotal;
-                total.classList.add('highlight');
-                setTimeout(() => total.classList.remove('highlight'), 1000);
-            });
-
-            if (mobileCount) {
-                mobileCount.textContent = cartData.total_items;
-            }
-        };
-
-        // Listen for cart update events
-        document.addEventListener('cartUpdated', function(e) {
-            updateCartUI(e.detail);
-        });
-
-        function showLogoutConfirm(event) {
-            event.preventDefault();
-            document.getElementById('logout-modal').style.display = 'flex';
-        }
-
-        function closeLogoutModal() {
-            document.getElementById('logout-modal').style.display = 'none';
-        }
-
-        function submitLogout() {
-            const form = document.getElementById('logout-form');
-            if (form) {
-                // Get CSRF token
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                
-                // Submit form with CSRF token
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    credentials: 'same-origin'
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.href = "{% url 'store:login' %}";
+            document.addEventListener('DOMContentLoaded', function() {
+                // Function to update cart UI
+                function updateCartDisplay(cartData) {
+                    // Update cart count and total
+                    const cartCount = document.getElementById('cart-count');
+                    const cartTotal = document.getElementById('cart-total');
+                    const subtotalAmount = document.querySelector('.subtotal-amount');
+                    
+                    if (cartCount) {
+                        cartCount.classList.remove('bounce');
+                        void cartCount.offsetWidth; // Trigger reflow
+                        cartCount.classList.add('bounce');
+                        cartCount.textContent = cartData.total_items;
                     }
+                    
+                    if (cartTotal) {
+                        cartTotal.textContent = ₹${cartData.total_amount};
+                    }
+
+                    if (subtotalAmount) {
+                        subtotalAmount.textContent = ₹${cartData.total_amount};
+                    }
+                }
+
+                // Function to show notifications
+                function showNotification(message, type = 'success') {
+                    NotificationManager.show(message, type);
+                }
+
+                // Listen for custom cart update events
+                document.addEventListener('cartUpdated', function(e) {
+                    updateCartDisplay(e.detail);
                 });
-            }
-        }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('logout-modal');
-            if (event.target == modal) {
-                closeLogoutModal();
-            }
-        }
+                // Make functions globally available
+                window.updateCartDisplay = updateCartDisplay;
+                window.showNotification = showNotification;
+            });
 
-        // Initialize CSRF protection
-        document.addEventListener('DOMContentLoaded', function() {
-            setupCSRFToken();
-        });
+            // Global notification manager
+            window.NotificationManager = {
+                container: document.getElementById('notification-container'),
+                
+                show: function(message, type = 'success', duration = 3000) {
+                    const notification = document.createElement('div');
+                    notification.className = notification ${type};
+                    
+                    notification.innerHTML = `
+                        <div class="notification-content">
+                            <div class="notification-icon">
+                                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                                  type === 'warning' ? 'exclamation-triangle' : 
+                                                  'exclamation-circle'}"></i>
+                            </div>
+                            <div class="notification-text">
+                                <p class="notification-title">
+                                    ${type.charAt(0).toUpperCase() + type.slice(1)}
+                                </p>
+                                <p class="notification-message">${message}</p>
+                            </div>
+                        </div>
+                    `;
 
-        // Update the renderSuggestions function
-        function renderSuggestions(suggestions, container, query) {
-            if (!suggestions || !container) return;
+                    this.container.appendChild(notification);
+                    
+                    // Trigger entrance animation
+                    requestAnimationFrame(() => {
+                        notification.classList.add('show');
+                    });
 
-            let html = '';
-            
-            // Products section first
-            if (suggestions.products && suggestions.products.length > 0) {
-                html += `
-                    <div class="suggestion-group">
-                        <div class="suggestion-category">Products</div>
-                        ${suggestions.products.map(product => `
-                            <a href="${product.url}" class="suggestion-item">
-                                <div class="suggestion-image">
-                                    <img src="${product.image_url || '/static/images/no-image.jpg'}" 
-                                         alt="${product.name}"
-                                         onerror="this.src='/static/images/no-image.jpg'">
-                                </div>
-                                <div class="suggestion-details">
-                                    <span class="suggestion-name">${highlightMatch(product.name, query)}</span>
-                                    <span class="suggestion-price">₹${product.price}</span>
-                                </div>
-                            </a>
-                        `).join('')}
-                    </div>
-                `;
-            }
-            
-            // Rest of the suggestions code...
-            // ...existing code...
-        }
-
-        // Setup CSRF token for AJAX requests
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup axios defaults
-            if (window.axios) {
-                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-            }
-            
-            // Setup fetch defaults
-            const originalFetch = window.fetch;
-            window.fetch = function(url, options = {}) {
-                return originalFetch(url, {
-                    ...options,
-                    headers: {
-                        ...options.headers,
-                        'X-CSRFToken': csrfToken,
-                    },
-                });
+                    // Remove notification after duration
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 300);
+                    }, duration);
+                }
             };
-        });
 
-        // Global notification function
-        window.showNotification = function(message, type = 'success') {
-            const container = document.getElementById('cart-notifications');
-            if (!container) return;
+            // Update existing showNotification function to use NotificationManager
+            window.showNotification = function(message, type) {
+                NotificationManager.show(message, type);
+            };
 
-            const notification = document.createElement('div');
-            notification.className = `cart-notification ${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                <span>${message}</span>
-            `;
+            // Global cart update handler
+            window.updateCartUI = function(cartData) {
+                const counts = document.querySelectorAll('.cart-count');
+                const totals = document.querySelectorAll('.cart-total');
+                const mobileCount = document.getElementById('mobile-cart-count');
+                
+                const formattedTotal = new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 2
+                }).format(cartData.total_amount);
 
-            container.appendChild(notification);
-            requestAnimationFrame(() => notification.classList.add('show'));
+                counts.forEach(count => {
+                    count.textContent = cartData.total_items;
+                    count.classList.add('bounce');
+                    setTimeout(() => count.classList.remove('bounce'), 1000);
+                });
 
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        };
+                totals.forEach(total => {
+                    total.textContent = formattedTotal;
+                    total.classList.add('highlight');
+                    setTimeout(() => total.classList.remove('highlight'), 1000);
+                });
+
+                if (mobileCount) {
+                    mobileCount.textContent = cartData.total_items;
+                }
+            };
+
+            // Listen for cart update events
+            document.addEventListener('cartUpdated', function(e) {
+                updateCartUI(e.detail);
+            });
+
+            function showLogoutConfirm(event) {
+                event.preventDefault();
+                document.getElementById('logout-modal').style.display = 'flex';
+            }
+
+            function closeLogoutModal() {
+                document.getElementById('logout-modal').style.display = 'none';
+            }
+
+            function submitLogout() {
+                const form = document.getElementById('logout-form');
+                if (form) {
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    // Submit form with CSRF token
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        credentials: 'same-origin'
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.href = "{% url 'store:login' %}";
+                        }
+                    });
+                }
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('logout-modal');
+                if (event.target == modal) {
+                    closeLogoutModal();
+                }
+            }
+
+            // Initialize CSRF protection
+            document.addEventListener('DOMContentLoaded', function() {
+                setupCSRFToken();
+            });
         </script>
-    {{ block.super }}
-    {% endblock %}
+        {% endblock extra_js %}
     </div>
+</div>
 
-    <!-- Add this inside the account-links div where the logout form is -->
-    <div id="logout-modal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Logout</h3>
-            <p>Are you sure you want to logout?</p>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
-                <button class="btn-confirm" onclick="submitLogout()">Logout</button>
-            </div>
+<!-- Modal markup -->
+<div id="logout-modal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Logout</h3>
+        <p>Are you sure you want to logout?</p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+            <button class="btn-confirm" onclick="submitLogout()">Logout</button>
         </div>
     </div>
+</div>
 
-    <style>
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
 
-    .modal-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        max-width: 400px;
-        width: 90%;
-        text-align: center;
-    }
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
 
-    .modal-actions {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-    }
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
 
-    .btn-cancel, .btn-confirm {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 500;
-    }
+.btn-cancel, .btn-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
 
-    .btn-cancel {
-        background-color: #6c757d;
-        color: white;
-    }
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
 
-    .btn-confirm {
-        background-color: #dc3545;
-        color: white;
-    }
-    </style>
+.btn-confirm {
+    background-color: #dc3545;
+    color: white;
+}
+</style>
 </body>
 </html>

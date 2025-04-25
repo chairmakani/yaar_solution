@@ -1,6 +1,6 @@
 import time
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Max, Q, Sum  # Add Sum
+from django.db.models import Max, Q, Sum, Count  # Add Sum, CountAdd Sum and Count
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -12,8 +12,8 @@ from django.core.paginator import Paginator
 import json
 from .models import (
     Product, Category, Location, NGO, Cart, CartItem, 
-    UnitType, ProductVariant, OTP, Order, Address,  # Add Address here
-    WishlistItem, UserActivity ,  OrderItem ,  # Add these as well since they're used in profile_view
+    UnitType, ProductVariant, OTP, Order, Address,  # Add Address here Address here
+    WishlistItem, UserActivity, OrderItem, UserProfile,  # Add UserProfile to the imports
 )
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
@@ -22,7 +22,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, OperationalError, transaction, DatabaseError
-from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_exempt
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
@@ -32,13 +32,13 @@ from .utils import send_otp_email, verify_otp
 
 import razorpay
 from django.conf import settings
+from django.templatetags.static import static
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(
-    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
 )
 
-def home(request):
+def shop_view(request):
     """View to render the homepage with categories and products."""
     products = Product.objects.all().select_related('category')
     
@@ -343,6 +343,14 @@ def cart_view(request):
     return render(request, 'store/cart.html', context)
 
 from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from decimal import Decimal
+import json
+import logging
+from .models import Product, ProductVariant
+
+logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST", "OPTIONS"])
 def add_to_cart(request):
@@ -358,80 +366,59 @@ def add_to_cart(request):
         product_id = data.get('product_id')
         variant_id = data.get('variant_id')
         quantity = int(data.get('quantity', 1))
-        
-        # Validate quantity
+
         if quantity < 1:
             return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
 
-        # Verify the product exists
         product = get_object_or_404(Product, id=product_id)
-        
-        # Handle variants vs standard products
+
         if product.has_variants:
             if not variant_id:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Please select a variant'
-                }, status=400)
-            
+                return JsonResponse({'success': False, 'message': 'Please select a variant'}, status=400)
+
             variant = get_object_or_404(ProductVariant, id=variant_id, product_id=product_id)
 
             if variant.stock < quantity:
-                return JsonResponse({
-                    'success': False,
-                    'message': f'Only {variant.stock} items available'
-                }, status=400)
-            
+                return JsonResponse({'success': False, 'message': f'Only {variant.stock} items available'}, status=400)
+
             item_key = f'variant_{variant_id}'
             price = variant.price
             max_quantity = variant.stock
             product_name = f"{product.name} - {variant.value} {variant.get_unit_display()}"
-            
             image_url = variant.image.url if getattr(variant, 'image', None) else (
                 product.primary_image.image.url if product.primary_image else None
             )
-
         else:
             if product.stock < quantity:
-                return JsonResponse({
-                    'success': False,
-                    'message': f'Only {product.stock} items available'
-                }, status=400)
-            
+                return JsonResponse({'success': False, 'message': f'Only {product.stock} items available'}, status=400)
+
             item_key = f'product_{product_id}'
             price = product.price
             max_quantity = product.stock
             product_name = product.name
             image_url = product.primary_image.image.url if product.primary_image else None
 
-        # Get or create cart from session
         cart = request.session.get('cart', {})
 
-        # Update or add to cart
         if item_key in cart:
             total_quantity = cart[item_key]['quantity'] + quantity
             if total_quantity > max_quantity:
-                return JsonResponse({
-                    'success': False,
-                    'message': f'Cannot add more items. Maximum available: {max_quantity}'
-                }, status=400)
+                return JsonResponse({'success': False, 'message': f'Cannot add more items. Maximum available: {max_quantity}'}, status=400)
             cart[item_key]['quantity'] = total_quantity
         else:
             cart[item_key] = {
                 'product_id': product_id,
                 'variant_id': variant_id,
                 'quantity': quantity,
-                'price': str(price),  # store as string to avoid float precision issues
+                'price': str(price),
                 'name': product_name,
                 'image': image_url,
                 'max_quantity': max_quantity
             }
-        
-        # Save updated cart back to session
+
         request.session['cart'] = cart
         request.session.modified = True
 
-        # Calculate cart totals
         total_items = sum(item['quantity'] for item in cart.values())
         total_amount = sum(Decimal(item['price']) * item['quantity'] for item in cart.values())
 
@@ -441,22 +428,19 @@ def add_to_cart(request):
             'items': list(cart.values())
         }
 
-        # Ensure proper JSON response headers
-        response = JsonResponse({
+        return JsonResponse({
             'success': True,
             'message': 'Added to cart successfully',
             'cart': cart_data
         })
-        response['Content-Type'] = 'application/json'
-        return response
-        
+
     except Exception as e:
         logger.error(f"Add to cart error: {str(e)}", exc_info=True)
         return JsonResponse({
             'success': False,
             'message': 'Something went wrong. Please try again.'
-        }, status=500, content_type='application/json')
-
+        }, status=500)
+    
 @require_POST
 def remove_from_cart(request):
     try:
@@ -573,6 +557,90 @@ def update_cart(request):
         return JsonResponse({
             'success': False,
             'message': str(e)
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+@require_POST
+def check_stock(request):
+    """Check product stock availability"""
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        variant_id = data.get('variant_id')
+        quantity = int(data.get('quantity', 1))
+
+        if quantity < 1:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid quantity'
+            }, status=400)
+
+        # Get product and check if it exists
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Product not found'
+            }, status=404)
+
+        # Check if product is available
+        if not product.is_available:
+            return JsonResponse({
+                'success': False,
+                'message': 'Product is not available'
+            })
+
+        # Handle variant if specified
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.get(id=variant_id, product=product)
+                available_stock = variant.stock
+            except ProductVariant.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Variant not found'
+                }, status=404)
+        else:
+            available_stock = product.stock
+
+        # Get current cart quantity for this product/variant
+        cart = request.session.get('cart', {})
+        current_cart_qty = 0
+        
+        # Sum up quantities for this product/variant in cart
+        for item_key, item in cart.items():
+            if str(item.get('product_id')) == str(product_id):
+                if variant_id:
+                    if str(item.get('variant_id')) == str(variant_id):
+                        current_cart_qty += item['quantity']
+                else:
+                    current_cart_qty += item['quantity']
+
+        # Check if requested quantity is available
+        total_requested = current_cart_qty + quantity
+        if total_requested > available_stock:
+            return JsonResponse({
+                'success': True,
+                'inStock': False,
+                'available': available_stock,
+                'message': f'Only {available_stock} items available'
+            })
+
+        return JsonResponse({
+            'success': True,
+            'inStock': True,
+            'available': available_stock
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON data'
         }, status=400)
     except Exception as e:
         return JsonResponse({
@@ -1126,79 +1194,96 @@ def verify_account(request):
 @csrf_protect
 @require_http_methods(["GET", "POST"])
 def register_view(request):
-    """Handle user registration with GET and POST"""
-
-    if request.method == 'GET':
-        return render(request, 'store/register.html')
-
-    try:
-        # Get data based on content type
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
-            data = request.POST
-
-        phone = data.get('phone')
-        email = data.get('email')
-        name = data.get('name')
-        password = data.get('password')
-
-        # Validate required fields
-        if not all([phone, email, name, password]):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'All fields are required'
-            }, status=400)
-
-        # Check if user already exists
-        if User.objects.filter(username=email).exists() or User.objects.filter(email=email).exists():
-            return JsonResponse({
-                'status': 'error',
-                'message': 'A user with this email already exists'
-            }, status=400)
-
-        # Create user with is_active=False
-        with transaction.atomic():
-            names = name.split(' ', 1)
-            first_name = names[0]
-            last_name = names[1] if len(names) > 1 else ''
-
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name,
-                is_active=False
-            )
-
-            user.profile.phone_number = phone
-            user.profile.save()
-
-            # Store user ID in session for verification
-            request.session['registration_user_id'] = user.id
-            request.session['verification_user_id'] = user.id
-
-            # Send OTP
-            if send_otp_email(email):
-                return JsonResponse({
-                    'status': 'success',
-                    'redirect_url': reverse('store:verify_otp')
-                })
+    if request.method == "POST":
+        try:
+            # Check content type
+            if request.content_type == 'application/json':
+                data = json.loads(request.body.decode('utf-8'))
             else:
-                raise ValidationError('Failed to send OTP')
+                data = request.POST.dict()
 
-    except ValidationError as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
-    except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Registration failed'
-        }, status=500)
+            # Validate required fields
+            required_fields = ['name', 'email', 'phone', 'password']
+            if not all(data.get(field) for field in required_fields):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'All fields are required'
+                }, status=400)
+            
+            # Check if email exists
+            if User.objects.filter(email=data['email']).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Email is already registered'
+                }, status=400)
+
+            # Check if phone exists
+            if UserProfile.objects.filter(phone_number=data['phone']).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Phone number is already registered'
+                }, status=400)
+
+            # Create user and profile
+            with transaction.atomic():
+                # Split name into first and last name
+                names = data['name'].split(' ', 1)
+                first_name = names[0]
+                last_name = names[1] if len(names) > 1 else ''
+
+                # Create user
+                user = User.objects.create_user(
+                    username=data['email'],
+                    email=data['email'],
+                    password=data['password'],
+                    first_name=first_name,
+                    last_name=last_name,
+                    is_active=False
+                )
+
+                # Update profile
+                profile = user.profile
+                profile.phone_number = data['phone']
+                profile.save()
+
+                # Store registration ID in session
+                request.session['registration_user_id'] = user.id
+
+                # Send verification email
+                if send_otp_email(data['email']):
+                    return JsonResponse({
+                        'status': 'success',
+                        'redirect_url': reverse('store:verify_otp')
+                    })
+                else:
+                    raise ValidationError('Failed to send verification code')
+
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Invalid JSON data'
+            }, status=400)
+        except IntegrityError as e:
+            if 'UNIQUE constraint' in str(e):
+                field = 'email' if 'auth_user.username' in str(e) else 'phone number'
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'This {field} is already registered'
+                }, status=400)
+            raise
+        except ValidationError as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+        except Exception as e:
+            logger.error(f"Registration error: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Registration failed. Please try again.'
+            }, status=400)
+
+    return render(request, 'store/register.html')
 
 @ensure_csrf_cookie
 @csrf_protect
@@ -1434,74 +1519,43 @@ class ProductDetailView(DetailView):
         context['variants'] = variants_data
         return context
 
-@require_POST 
-def check_stock(request):
-    """API endpoint to check stock levels for products"""
-    try:
-        # Get CSRF token from either header or request
-        csrf_token = request.headers.get('X-CSRFToken') or request.COOKIES.get('csrftoken')
-        
-        # If no CSRF token found in standard places, check other common header variations
-        if not csrf_token:
-            csrf_token = (request.headers.get('X-CSRF-Token') or 
-                         request.headers.get('CSRF-Token') or 
-                         request.headers.get('Csrf-Token'))
-        
-        if not csrf_token and not request.is_ajax():
-            return JsonResponse({
-                'success': False,
-                'message': 'CSRF verification failed. Please reload the page.'
-            }, status=403)
-
-        data = json.loads(request.body)
-        product_ids = data.get('product_ids', [])
-
-        stock_data = []
-        for product_id in product_ids:
-            try:
-                product = Product.objects.get(id=product_id)
-                if product.has_variants:
-                    variants = product.variants.filter(is_active=True)
-                    for variant in variants:
-                        stock_data.append({
-                            'product_id': product_id,
-                            'variant_id': variant.id,
-                            'stock': variant.stock,
-                            'status': get_stock_status(variant.stock, product.stock_threshold)
-                        })
-                else:
-                    stock_data.append({
-                        'product_id': product_id,
-                        'stock': product.stock,
-                        'status': get_stock_status(product.stock, product.stock_threshold)
-                    })
-            except Product.DoesNotExist:
-                continue
-
-        return JsonResponse({
-            'success': True,
-            'stock_data': stock_data
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid JSON data'
-        }, status=400)
-    except Exception as e:
-        logger.error(f"Stock check error: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        }, status=500)
-
 def get_stock_status(stock, threshold):
-    """Helper function to determine stock status"""
     if stock <= 0:
         return 'out_of_stock'
     elif stock <= threshold:
         return 'low_stock'
     return 'in_stock'
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+
+@csrf_exempt
+@require_POST
+def check_stock(request):
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        quantity = data.get('quantity', 1)
+        
+        product = Product.objects.get(id=product_id)
+        in_stock = product.stock >= quantity
+        
+        return JsonResponse({
+            'success': True,
+            'inStock': in_stock,
+            'available': product.stock
+        })
+    except Product.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Product not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
 
 # pages included
 
@@ -1512,19 +1566,55 @@ def main(request):
     return render(request, 'store/main.html')
 
 def privacy_policy(request):
-    return render(request, 'store/policy/privacy_policy.html')
+    return render(request, 'store/policy/privacy-policy.html')
 
 def shipping_policy(request):
-    return render(request, 'store/policy/shipping_policy.html')
+    return render(request, 'store/policy/shipping-policy.html')
 
 def terms_policy(request):
-    return render(request, 'store/policy/terms_policy.html')
+    return render(request, 'store/policy/terms-policy.html')
 
 def return_and_cancellation_policy(request):
-    return render(request, 'store/policy/return and cancellation_policy.html')
+    return render(request, 'store/policy/return-and-cancellation-policy.html')
 
 def contact_view(request):
-    return render(request, 'store/ourself/contact.html')
+    return render(request, 'store/ourself/contact.html')  # Updated template path
+
+@csrf_exempt
+def contact_submit(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '')
+        email = request.POST.get('email', '')
+        phone = request.POST.get('phone', '')
+        company = request.POST.get('company', '')
+        subject = request.POST.get('subject', '')
+        message = request.POST.get('message', '')
+        
+        email_body = f"""
+        New Contact Form Submission
+
+        From: {name}
+        Email: {email}
+        Phone: {phone}
+        Company: {company}
+
+        Message:
+        {message}
+        """
+        
+        try:
+            send_mail(
+                subject=f"Contact Form: {subject}",
+                message=email_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.EMAIL_HOST_USER],  # Changed to EMAIL_HOST_USER
+                fail_silently=False,
+            )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 @login_required
 @require_POST
@@ -1573,7 +1663,10 @@ def add_to_wishlist(request):
             'message': 'Failed to update wishlist'
         }, status=500)
 
-from django.shortcuts import render
+from django.db.models import Q, Count
+from django.http import JsonResponse
+import logging
+from django.templatetags.static import static
 
 def main_view(request):
     """Landing page view using main.html"""
@@ -1583,47 +1676,46 @@ def main_view(request):
     }
     return render(request, 'store/main.html', context)
 
-def shop_view(request):
-    """Shop view using previous home.html template"""
-    products = Product.objects.all().select_related('category')
+def search_suggestions(request):
+    """API endpoint for search suggestions"""
+    query = request.GET.get('q', '').strip()
     
-    # Enhanced sorting logic
-    sort_option = request.GET.get('sort', 'default')
-    
-    # Apply sorting with proper handling
-    if sort_option and sort_option != 'default':
-        if sort_option == 'price-low-high':
-            products = products.order_by('price')
-        elif sort_option == 'price-high-low':
-            products = products.order_by('-price')
+    if len(query) < 2:
+        return JsonResponse({
+            'success': True,
+            'suggestions': {
+                'categories': [],
+                'products': [],
+                'popular': []
+            }
+        })
 
-    # Fetch categories
-    categories = Category.objects.all()
-    
-    # Price filter logic
-    max_price = products.aggregate(Max('price'))['price__max'] or 0
-    min_price = int(request.GET.get('min_price', 0))
-    max_price_range = int(request.GET.get('max_price', max_price))
-    filtered_products = products.filter(price__gte=min_price, price__lte=max_price_range)
-
-    # Pagination logic
-    page = int(request.GET.get('page', 1))
-    products_per_page = 9
-    paginator = Paginator(filtered_products, products_per_page)
     try:
-        paginated_products = paginator.page(page)
-    except:
-        paginated_products = paginator.page(1)
+        # Get suggestions from search_suggestions.py
+        from .search_suggestions import search_suggestions as get_suggestions
+        response = get_suggestions(request)
+        
+        if 'error' in response.content.decode():
+            return JsonResponse({
+                'success': False,
+                'message': 'Error fetching suggestions',
+                'suggestions': {
+                    'categories': [],
+                    'products': [],
+                    'popular': []
+                }
+            })
 
-    context = {
-        'categories': categories,
-        'products': paginated_products,
-        'sort_option': sort_option,
-        'min_price': min_price,
-        'max_price': max_price_range,
-        'max_price_filtered': max_price,
-        'current_page': page,
-        'total_pages': paginator.num_pages
-    }
-    
-    return render(request, 'store/home.html', context)
+        return response
+
+    except Exception as e:
+        logger.error(f"Search suggestions error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error fetching suggestions',
+            'suggestions': {
+                'categories': [],
+                'products': [],
+                'popular': []
+            }
+        })

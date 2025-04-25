@@ -4,76 +4,308 @@
     {% block extra_css %}
     {{ block.super }}
     <style>
-       body {
-        margin: 0;
+      .contact-page-container {
+        color: #333;
+      }
+  
+      .contact-page-container .hero-section {
+        background: #035e54;
+        color: #fff;
+        text-align: center;
+        padding: 60px 20px;
+      }
+
+      .contact-page-container .hero-section h1 {
+        margin-bottom: 40px;  /* Increased from 20px to 40px */
+      }
+  
+      .contact-page-container .contact-info {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 40px 20px;
+        gap: 20px;
+      }
+  
+      .contact-page-container .info-left {
+        flex: 1;
+        min-width: 280px;
+        padding-left: 40px;  /* Added padding to move content right */
+      }
+
+      .contact-page-container .info-left h2 {
+        margin-bottom: 20px;
+      }
+
+      .contact-page-container .info-left ul {
+        list-style: none;
         padding: 0;
+      }
+  
+      .contact-page-container .info-left ul li {
+        margin: 15px 0 25px 0;
+      }
+  
+      .contact-page-container .info-right img {
+        max-width: 100%;
+        border-radius: 8px;
+      }
+  
+      .contact-page-container .message-form {
+        background: #0a9c7d;
+        color: white;
+        text-align: center;
+        padding: 50px 20px;
+      }
+  
+      .contact-page-container .message-form form {
+        max-width: 700px;
+        margin: 0 auto;
+        background: white;
+        color: #000;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      }
+  
+      .contact-page-container .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+  
+      .contact-page-container form input,
+      .contact-page-container form textarea {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+  
+      .contact-page-container form button {
+        background-color: #0a9c7d;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .contact-page-container .social-media h3 {
+        margin-bottom: 25px;
+      }
+
+      .contact-page-container .social-media {
+        text-align: center;
+        padding: 40px 20px;
+      }
+  
+      .contact-page-container .icons a img {
+        width: 18px;
+        margin: 0 8px;
+        transition: transform 0.3s;
+      }
+  
+      .contact-page-container .icons a img:hover {
+        transform: scale(1.2);
+      }
+
+      /* Media Queries for Mobile Devices */
+      @media screen and (max-width: 768px) {
+        .contact-page-container .hero-section {
+          padding: 40px 15px;
+        }
+
+        .contact-page-container .hero-section h1 {
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
+
+        .contact-page-container .hero-section p {
+          font-size: 12px;
+          line-height: 1.4;
         }
         
-        .text-center {
-            margin-top: 80px;
-            text-align: center;
+        .contact-page-container .contact-info {
+          padding: 20px 15px;
         }
-        .large-heading {
-            font-size: 2.5em;
-            margin-bottom: 30px;
+
+        .contact-page-container .info-left {
+          padding-left: 0;
+          width: 100%;
+          text-align: center;
         }
-        .contact-container {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            margin-top: 150px;
+
+        .contact-page-container .info-left ul {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
         }
-        .contact-container h3 {
-            margin-bottom: 20px;
+
+        .contact-page-container .info-left ul li {
+          text-align: center;
+          width: 100%;
+          max-width: 300px;
         }
-        .contact-column {
-            flex: 1;
-            padding: 20px;
-            margin: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+        
+        .contact-page-container .info-right {
+          width: 100%;
+          padding: 0 15px;
+          margin: 20px 0;
         }
-        .contact-column:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+        .contact-page-container .info-right iframe {
+          width: 100%;
+          min-width: 290px;
+          height: 200px;  /* Reduced height for rectangular shape */
+          margin: 0 auto;
+          display: block;
+          border-radius: 4px;  /* Added slight border radius */
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Optional: adds depth */
         }
-        .contact-left {
-            text-align: left;
+
+        .contact-page-container .message-form {
+          padding: 25px 10px;
         }
-        .contact-center {
-            text-align: center;
+
+        .contact-page-container .message-form h2 {
+          font-size: 20px;
+          margin-bottom: 10px;
         }
-        .contact-right {
-            text-align: right;
+
+        .contact-page-container .message-form form {
+          padding: 15px;
+          max-width: 90%;
         }
-        </style>
+
+        .contact-page-container form input,
+        .contact-page-container form textarea {
+          padding: 8px;
+          margin: 5px 0;
+          font-size: 14px;
+        }
+
+        .contact-page-container form button {
+          padding: 10px 15px;
+          font-size: 14px;
+          margin-top: 10px;
+        }
+
+        .contact-page-container textarea[name="message"] {
+          height: 100px;
+        }
+
+        .contact-page-container .social-media {
+          padding: 30px 15px;
+        }
+
+        .contact-page-container .icons a img {
+          width: 24px;
+          margin: 0 12px;
+        }
+
+        .contact-page-container .info-left h2 {
+          font-size: 20px;
+          margin-bottom: 15px;
+        }
+
+        .contact-page-container .info-left p {
+          font-size: 14px;
+          margin-bottom: 15px;
+        }
+
+        .contact-page-container .info-left ul li {
+          font-size: 13px;
+          margin: 10px 0 15px 0;
+        }
+
+        .contact-page-container .info-left ul li strong {
+          font-size: 14px;
+        }
+      }
+    </style>
     {% endblock %}
     {% block content %}
     {{ block.super }}
     {% endblock %}
 
 {% block content2  %}
-<h6 class="text-center">I Hope You Have a Good Relationship</h6><br>
-<h1 class="large-heading">Contact Details</h1>
+<div class="contact-page-container">
 
-<div class="contact-container">
-    <div class="contact-column contact-center">
-        <h3>Number</h3>
-        <p>+91 9488674103</p>
+<section class="hero-section">
+    <h1>Contact us</h1>
+    <p>I hope you have a good relationship with us. We are here to help you.</p>
+  </section>
+
+  <section class="contact-info">
+    <div class="info-left">
+      <h2>Address</h2>
+      <p>Get in touch and let us know how we can help.</p>
+      <ul>
+        <li><strong>Head Office:</strong><br><br> No.175C/6, Munthal Road, Punnaiyapuram, Puliyankudi-TenkasiDt.</li>
+        <li><strong>Email us:</strong><br><br> yaarsolution@gmail.com</li>
+        <li><strong>Call us:</strong><br><br> +91 9488674103</li>
+      </ul>
     </div>
-    <div class="contact-column contact-center">
-        <h3>Email</h3>
-        <p>yaar solution@gamil.com</p>
+    <div class="info-right">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3939.0152962664597!2d77.38431877502036!3d9.153090590913266!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b0691d8a0844bab%3A0xf40452ec0f24a940!2sYAAR%20SOLUTIONS!5e0!3m2!1sen!2sin!4v1745221996770!5m2!1sen!2sin" width="600" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
-    <div class="contact-column contact-center">
-        <h3>Address</h3>
-        <p>No.175c/6, Munthal Road,Punnaiyapuram,<br>Puliyankudi,Tenkasi Dt.-627 751.TamilNadu</p>
+  </section>
+
+  <section class="message-form">
+    <h2>Send us a message</h2><br>
+    <form id="contact-form">
+      {% csrf_token %}
+      <div class="form-grid">
+        <input type="text" name="name" placeholder="Name" required />
+        <input type="text" name="company" placeholder="Company" />
+        <input type="tel" name="phone" placeholder="Phone" required />
+        <input type="email" name="email" placeholder="Email" required />
+      </div>
+      <input type="text" name="subject" placeholder="Subject" />
+      <textarea name="message" placeholder="Message" rows="5" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+  </section>
+
+  <section class="social-media">
+    <h3>Follow our social media</h3>
+    <div class="icons">
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/64/733/733547.png" alt="Facebook" /></a>
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/64/733/733558.png" alt="Instagram" /></a>
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/64/733/733579.png" alt="Twitter" /></a>
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/64/1384/1384060.png" alt="YouTube" /></a>
     </div>
-    <div class="contact-column contact-center">
-        <h3>Site Link</h3>
-        <p>WWW.Yaar.co.in</p>
-    </div>
+  </section>
+
+  <script>
+    document.getElementById("contact-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      fetch('/contact/submit/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert("Thank you! Your message has been sent successfully.");
+          form.reset();
+        } else {
+          alert(data.message || "Error sending message. Please try again.");
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Error sending message. Please try again.");
+      });
+    });
+  </script>
 </div>
 {% endblock %}

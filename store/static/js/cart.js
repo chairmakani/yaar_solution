@@ -9,6 +9,16 @@ if (typeof window.CartUI === 'undefined') {
 
             // Add debounce for quantity updates
             this.updateDebounced = this.debounce(this.updateCart.bind(this), 500);
+
+            this.initializeNotificationContainer();
+        }
+
+        initializeNotificationContainer() {
+            if (!document.querySelector('.notification-container')) {
+                const container = document.createElement('div');
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
         }
 
         initialize() {
@@ -159,8 +169,15 @@ if (typeof window.CartUI === 'undefined') {
                 button.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const cartItem = e.target.closest('.cart-item');
+                    const cartItem = button.closest('.cart-item');
+                    if (!cartItem) return;
+                    
                     const itemKey = cartItem.dataset.itemKey;
+                    if (!itemKey) {
+                        console.error('No item key found for cart item');
+                        return;
+                    }
+                    
                     this.showRemoveConfirmation(cartItem, itemKey);
                 });
             });
@@ -181,10 +198,17 @@ if (typeof window.CartUI === 'undefined') {
         }
 
         showRemoveConfirmation(cartItem, itemKey) {
+            if (!itemKey) {
+                console.error('No item key provided for removal');
+                return;
+            }
+            
             this.itemToRemove = { element: cartItem, key: itemKey };
             const modal = document.getElementById('removeModal');
-            modal.classList.add('show');
-            modal.removeAttribute('hidden');
+            if (modal) {
+                modal.classList.add('show');
+                modal.removeAttribute('hidden');
+            }
         }
 
         hideRemoveConfirmation() {
@@ -195,50 +219,94 @@ if (typeof window.CartUI === 'undefined') {
         }
 
         async removeConfirmedItem() {
-            if (!this.itemToRemove) return;
+            if (!this.itemToRemove || !this.itemToRemove.key) {
+                this.showNotification('Invalid item selected for removal', 'error');
+                return;
+            }
 
             try {
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                const response = await fetch('/cart/remove/', {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found');
+                }
+
+                const response = await fetch('/api/cart/remove/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': csrfToken,
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         item_key: this.itemToRemove.key
-                    })
+                    }),
+                    credentials: 'same-origin'
                 });
 
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Remove item with animation
-                    this.itemToRemove.element.classList.add('removing');
-                    
-                    // Update cart totals
-                    this.updateCartTotals({
-                        subtotal: data.cart.subtotal,
-                        total: data.cart.total,
-                        total_items: data.cart.total_items
-                    });
+                    // Safely handle element removal
+                    const itemElement = this.itemToRemove.element;
+                    if (itemElement && itemElement.parentNode) {
+                        itemElement.classList.add('removing');
+                        
+                        // Update cart totals
+                        this.updateCartTotals(data.cart);
 
-                    // Remove element after animation
-                    setTimeout(() => {
-                        this.itemToRemove.element.remove();
-                        this.checkEmptyCart();
-                    }, 500);
+                        // Remove element after animation
+                        setTimeout(() => {
+                            if (itemElement.parentNode) {
+                                itemElement.remove();
+                                this.checkEmptyCart();
+                            }
+                        }, 500);
 
-                    // Show success notification
-                    this.showNotification('Item removed successfully', 'success');
+                        this.showNotification('Item removed successfully', 'success');
+                    }
                 } else {
                     throw new Error(data.message || 'Failed to remove item');
                 }
             } catch (error) {
+                console.error('Error removing item:', error);
                 this.showNotification(error.message || 'Error removing item', 'error');
             } finally {
                 this.hideRemoveConfirmation();
             }
+        }
+
+        showNotification(message, type = 'info') {
+            const container = document.querySelector('.notification-container');
+            if (!container) return;
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <p>${message}</p>
+                </div>
+                <button class="notification-close">&times;</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+            });
+
+            // Auto remove after delay
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+
+            // Add click to dismiss
+            notification.querySelector('.notification-close')?.addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
         }
 
         async removeItem(item) {

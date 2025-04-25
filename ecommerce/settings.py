@@ -24,10 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-vi6d0wuowjt4n&-dm*!f!x9s%0sytqjv(kghf!fp%lelgy028q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = False  # Set to True for development
 
-ALLOWED_HOSTS = ['yaar.co.in', 'www.yaar.co.in']
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'yaar.co.in', 'www.yaar.co.in']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://yaar.co.in',
@@ -38,21 +37,39 @@ CSRF_TRUSTED_ORIGINS = [
 
 # CORS Settings
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
     'https://yaar.co.in',
     'https://www.yaar.co.in',
-    'http://localhost:8000',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://yaar.co.in',
-    'https://www.yaar.co.in',
-    'http://localhost:8000',
-]
-
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True  # Only send over HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access
 CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_DOMAIN = '.yaar.co.in'  # Include subdomains
+CSRF_USE_SESSIONS = False  # Store CSRF in cookie rather than session
+         
 
 # Application definition
 INSTALLED_APPS = [
@@ -66,10 +83,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',  # Your app
     'rest_framework',
+    'corsheaders',  # Add this line
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'store.middleware.NoCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -172,10 +191,12 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session settings
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_DOMAIN = 'yaar.co.in'  # Remove domain restriction for development
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'      
+SESSION_COOKIE_SECURE = True  # Set to False for development
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Change to SMTP backend

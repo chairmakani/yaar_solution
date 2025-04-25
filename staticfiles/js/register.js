@@ -285,6 +285,72 @@ document.addEventListener('DOMContentLoaded', () => {
     new RegisterForm();
 });
 
+async function handleSubmit(e) {
+    e.preventDefault();
+    
+    const errorContainer = document.getElementById('error-container');
+    const errorMessage = document.getElementById('error-message');
+    
+    try {
+        const form = e.target;
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        setLoading(true);
+        errorContainer.style.display = 'none';
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Registration failed');
+        }
+
+        if (data.status === 'success') {
+            window.location.href = data.redirect_url;
+        } else {
+            throw new Error(data.message || 'Registration failed');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        errorContainer.style.display = 'block';
+        errorMessage.textContent = error.message || 'Registration failed. Please try again.';
+    } finally {
+        setLoading(false);
+    }
+}
+
+function setLoading(isLoading) {
+    const submitButton = document.getElementById('register-submit');
+    if (!submitButton) return;
+
+    const buttonText = submitButton.querySelector('.button-text');
+    const loadingText = submitButton.querySelector('.loading-text');
+    
+    if (!buttonText || !loadingText) return;
+
+    submitButton.disabled = isLoading;
+    buttonText.style.display = isLoading ? 'none' : 'block';
+    loadingText.style.display = isLoading ? 'block' : 'none';
+}
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('register-form');
+    if (form) {
+        form.addEventListener('submit', handleSubmit);
+    }
+});
+
 class RegistrationHandler {
     constructor() {
         this.form = document.getElementById('register-form');
@@ -382,24 +448,6 @@ class RegistrationHandler {
 document.addEventListener('DOMContentLoaded', () => {
     new RegistrationHandler();
 });
-
-function setLoading(isLoading) {
-    const button = document.getElementById('register-submit');
-    const buttonText = button.querySelector('.button-text');
-    const loadingText = button.querySelector('.loading-text');
-    
-    if (isLoading) {
-        button.classList.add('loading');
-        button.disabled = true;
-        buttonText.style.opacity = '0';
-        loadingText.style.display = 'block';
-    } else {
-        button.classList.remove('loading');
-        button.disabled = false;
-        buttonText.style.opacity = '1';
-        loadingText.style.display = 'none';
-    }
-}
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('register-form');

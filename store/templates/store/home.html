@@ -174,9 +174,9 @@ Home
                                 <i class="fas fa-list-ul"></i> Select Options
                             </a>
                         {% else %}
-                            {% if product.stock > 0 %}
-                                <div class="quantity-controls">
-                                    <div class="quantity-selector" data-product-id="{{ product.id }}">
+                            <div class="quantity-controls">
+                                <div class="quantity-selector" data-product-id="{{ product.id }}">
+                                    {% if product.stock > 0 %}
                                         <button class="qty-btn decrease" type="button">
                                             <i class="fas fa-minus"></i>
                                         </button>
@@ -184,6 +184,7 @@ Home
                                                class="quantity-input" 
                                                value="1" 
                                                min="1"
+                                               max="{{ product.stock }}"
                                                readonly
                                                data-product-id="{{ product.id }}"
                                                data-max-stock="{{ product.stock }}"
@@ -191,21 +192,27 @@ Home
                                         <button class="qty-btn increase" type="button">
                                             <i class="fas fa-plus"></i>
                                         </button>
-                                    </div>
+                                    {% endif %}
                                 </div>
+                            </div>
+                            {% if product.stock > 0 %}
                                 <button class="add-to-cart-btn btn" 
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
-                                        {% if product.has_variants %}data-requires-variant="true"{% endif %}>
+                                        data-stock="{{ product.stock }}">
                                     <i class="fas fa-cart-plus"></i> Add to Cart
                                 </button>
                             {% else %}
                                 <div class="out-of-stock-message">
-                                    <i class="fas fa-times-circle"></i>
+                                    <i class="fas fa-exclamation-circle"></i>
                                     Out of Stock
                                 </div>
-                                <button class="add-to-cart-btn btn disabled" disabled>
-                                    <i class="fas fa-cart-plus"></i> Out of Stock
+                                <button class="add-to-cart-btn btn disabled" 
+                                        disabled 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-stock="0">
+                                    <i class="fas fa-times"></i> Out of Stock
                                 </button>
                             {% endif %}
                         {% endif %}
@@ -237,8 +244,10 @@ Home
 
 {% block extra_js %}
 {{ block.super }}
+<script src="{% static 'js/product_detail.js' %}"> </script>
 <script src="{% static 'js/shop.js' %}"></script>
 <script src="{% static 'js/cart-manager.js' %}"></script>
+<script src="{% static 'js/cart-utils.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

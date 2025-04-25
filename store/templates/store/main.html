@@ -5,30 +5,37 @@
     {{ block.super }}
 
     <style>
+        /* Add this at the top of your existing styles */
+        .main-page-slider-wrapper {
+            margin-top: -50px;  /* Reduces gap from top */
+            margin-bottom: 20px;
+        }
+        
         /* Slider container */
-        .slider {
+        .main-page-slider {
             position: relative;
             width: 100%;
-            max-width: 1500px;
             overflow: hidden;
             margin: auto;
+            max-width: 1550px;  /* Added max-width */
         }
 
         /* Slider images */
-        .slider-images {
+        .main-page-slider-images {
             display: flex;
             transition: transform 1s ease-in-out;
+            height: 900px;  /* Added fixed height */
         }
 
-        .slider-images img {
-            width: 1500px;
-            height: 650px;
-            object-fit:fill;
-            flex-shrink: 0;
+        .main-page-slider-images img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;  /* Changed to cover */
+            flex: 0 0 100%;  /* Make each image take full width */
         }
 
         /* Navigation buttons */
-        .slider-btn {
+        .main-page-slider-btn {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -40,22 +47,21 @@
             z-index: 10;
         }
 
-        .slider-btn.left {
+        .main-page-slider-btn.left {
             left: 10px;
         }
 
-        .slider
-        .slider-btn.right {
+        .main-page-slider-btn.right {
             right: 10px;
         }
 
         /* View All button */
-        .link-tag-remove{
+        .main-page-link-tag-remove {
             text-decoration: none;
             color: white;
         }
 
-        .view-all {
+        .main-page-view-all {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -68,13 +74,13 @@
             margin: 20px auto;
         }
           
-        .view-all:hover {
+        .main-page-view-all:hover {
             transform: scale(1.1);
             background: darkgreen;
         }
 
         /* Header styles */
-        .carousel-header {
+        .main-page-carousel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -83,20 +89,20 @@
             margin-left: 50px;
         }
           
-        .carousel-header h2 {
+        .main-page-carousel-header h2 {
             font-size: 1.5rem;
             color: #333;
             margin: 0;
         }
           
-        .carousel-header a {
+        .main-page-carousel-header a {
             font-size: 1rem;
             color: green;
             text-decoration: none;
         }
 
         /* Carousel container and items */
-        .carousel-container {
+        .main-page-carousel-container {
             position: relative;
             width: 98%;
             overflow: hidden;
@@ -104,18 +110,18 @@
             padding: 0 40px;
         }
 
-        .carousel {
+        .main-page-carousel {
             display: flex;
             transition: transform 0.5s ease-in-out;
             gap: 5px;
             justify-content: flex-start;
         }
 
-        .carousel-container:hover .carousel {
+        .main-page-carousel-container:hover .main-page-carousel {
             animation-play-state: paused;
         }
 
-        .carousel-item {
+        .main-page-carousel-item {
             flex: 0 0 calc(20% - 4px);
             min-width: calc(20% - 4px);
             box-sizing: border-box;
@@ -125,23 +131,23 @@
             transition: transform 0.5s ease;
         }
 
-        .carousel-item img {
+        .main-page-carousel-item img {
             width: 180px;
             height: 130px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .carousel-item:hover img {
+        .main-page-carousel-item:hover img {
             transform: scale(1.01);
         }
 
-        .carousel-item p {
+        .main-page-carousel-item p {
             margin-top: 30px;
         }
 
         /* Navigation Controls */
-        .carousel-control {
+        .main-page-carousel-control {
             position: absolute;
             top: 45%;
             transform: translateY(-50%);
@@ -161,32 +167,32 @@
             z-index: 10;
         }
 
-        .carousel-control:hover {
+        .main-page-carousel-control:hover {
             background-color: rgb(33, 176, 95);
             color: white;
         }
 
-        .carousel-control.prev {
+        .main-page-carousel-control.prev {
             left: 0px;
         }
 
-        .carousel-control.next {
+        .main-page-carousel-control.next {
             right: 0px;
         }
 
-        .carousel-item a {
+        .main-page-carousel-item a {
             text-decoration: none;
             color: inherit;
             display: block;
         }
 
-        .carousel-item a:hover {
+        .main-page-carousel-item a:hover {
             transform: scale(1.05);
             transition: transform 0.3s ease;
         }
 
         /* Slider dots */
-        .slider-dots {
+        .main-page-slider-dots {
             position: absolute;
             bottom: 20px;
             left: 50%;
@@ -195,7 +201,7 @@
             gap: 6px;
         }
 
-        .dot {
+        .main-page-dot {
             width: 5px;
             height: 5px;
             border-radius: 50%;
@@ -204,95 +210,103 @@
             transition: all 0.2s ease;
         }
 
-        .dot.active {
+        .main-page-dot.active {
             background: white;
             transform: scale(1.2);
         }
 
         /* Mobile styles */
         @media screen and (max-width: 768px) {
-            .slider-images img {
+            .main-page-slider-images {
+                height: 300px;  /* Adjust height for mobile */
+            }
+
+            .main-page-slider-images img {
                 width: 100%;
                 height: 300px;
             }
 
-            .carousel-container {
+            .main-page-carousel-container {
                 width: 95%;
                 padding: 0 10px;
             }
 
-            .carousel-item {
+            .main-page-carousel-item {
                 flex: 0 0 100%;
             }
 
-            .carousel-header {
+            .main-page-carousel-header {
                 margin-left: 20px;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
 
-            .view-all {
-                width: 25%;
+            .main-page-view-all {
+                width: 110px;
                 justify-content: center;
                 font-size: 14px;
                 padding: 8px 16px;
             }
 
-            .carousel-header h2 {
+            .main-page-carousel-header h2 {
                 font-size: 1.2rem;
             }
 
-            .carousel-header a {
+            .main-page-carousel-header a {
                 font-size: 0.9rem;
             }
 
-            .slider-dots {
+            .main-page-slider-dots {
                 bottom: 10px;
                 gap: 4px;
             }
 
-            .dot {
+            .main-page-dot {
                 width: 4px;
                 height: 4px;
             }
         }
 
         @media screen and (max-width: 480px) {
-            .slider-images img {
+            .main-page-slider-images {
+                height: 200px;  /* Adjust height for smaller devices */
+            }
+
+            .main-page-slider-images img {
                 height: 200px;
             }
 
-            .carousel-item img {
+            .main-page-carousel-item img {
                 width: 150px;
                 height: 100px;
             }
 
-            .view-all {
+            .main-page-view-all {
                 width: 20%;
                 font-size: 12px;
                 padding: 6px 12px;
             }
 
-            .carousel-header h2 {
+            .main-page-carousel-header h2 {
                 font-size: 1rem;
             }
 
-            .carousel-header a {
+            .main-page-carousel-header a {
                 font-size: 0.8rem;
             }
 
-            .slider-dots {
+            .main-page-slider-dots {
                 bottom: 8px;
                 gap: 3px;
             }
 
-            .dot {
+            .main-page-dot {
                 width: 3px;
                 height: 3px;
             }
 
-            .dot.active {
+            .main-page-dot.active {
                 transform: scale(1.1);
             }
         }
@@ -303,33 +317,25 @@
     {% endblock %}
 
 {% block content2  %}
-
-    <div class="slider">
-        <div class="slider-images">
-            <img src="{% static 'images/img-1.jpg' %}" alt="Image 1">
-            <img src="{% static 'images/img-2.jpg' %}" alt="Image 2">
-            <img src="{% static 'images/img-3.jpg' %}" alt="Image 3">
-            <img src="{% static 'images/img-4.jpg' %}" alt="Image 4">
-            <img src="{% static 'images/img-5.jpg' %}" alt="Image 5">
-            <img src="{% static 'images/img-6.jpg' %}" alt="Image 6">
-            <img src="{% static 'images/img-7.jpg' %}" alt="Image 7">
-            <img src="{% static 'images/img-8.jpg' %}" alt="Image 8">
-            <img src="{% static 'images/img-9.jpg' %}" alt="Image 9">
-            <img src="{% static 'images/img-10.jpg' %}" alt="Image 10">
-            <img src="{% static 'images/img-11.jpg' %}" alt="Image 11">
+    <div class="main-page-slider-wrapper">
+        <div class="main-page-slider">
+            <div class="main-page-slider-images">
+                <img src="{% static 'images/product-of-tenkasi-banner.jpg' %}" alt="Tenkasi product Banner">
+                <img src="{% static 'images/organic-honey-banner.jpg' %}" alt="Organic Honey Banner">
+            </div>
+            <div class="main-page-slider-dots"></div>
         </div>
-        <div class="slider-dots"></div>
     </div>  
     
     <!-- Home Page Content -->
-    <div class="carousel-container">
-        <div class="carousel-header">
+    <div class="main-page-carousel-container">
+        <div class="main-page-carousel-header">
             <h2>Featured Categories <a href="{% url 'store:home' %}">Shop all</a></h2>
         </div><br><br>
 
-        <div class="carousel">
+        <div class="main-page-carousel">
             {% for category in categories %}
-            <div class="carousel-item">
+            <div class="main-page-carousel-item">
                 <a href="{% url 'store:category_products' category.id %}?product_filter={{ category.name }}">
                     <img src="{{ category.image.url }}" alt="{{ category.name }}">
                     <p>{{ category.name }}</p>
@@ -337,10 +343,10 @@
             </div>
             {% endfor %}
         </div>
-        <button class="carousel-control prev" onclick="moveCarousel(-1)">❮</button>
-        <button class="carousel-control next" onclick="moveCarousel(1)">❯</button>
-        <button class="view-all" style="margin-top: 50px;">
-            <i class="fas fa-shopping-cart"></i><a class="link-tag-remove" href="{% url 'store:home' %}">View All</a>
+        <button class="main-page-carousel-control prev" onclick="moveCarousel(-1)">❮</button>
+        <button class="main-page-carousel-control next" onclick="moveCarousel(1)">❯</button>
+        <button class="main-page-view-all" style="margin-top: 50px;">
+            <i class="fas fa-shopping-cart"></i><a class="main-page-link-tag-remove" href="{% url 'store:home' %}">View All</a>
         </button>
     </div>
 
@@ -349,146 +355,165 @@
 {% block extra_js %}
     {{ block.super }}
     <script>
-        const sliderImages = document.querySelector('.slider-images');
-        const images = document.querySelectorAll('.slider-images img');
+        // Slider functionality
+        const sliderImages = document.querySelector('.main-page-slider-images');
+        const images = document.querySelectorAll('.main-page-slider-images img');
         const totalImages = images.length;
-        const dotsContainer = document.querySelector('.slider-dots');
+        const dotsContainer = document.querySelector('.main-page-slider-dots');
+        let sliderInterval;
 
-        // Create dots
-        for (let i = 0; i < totalImages; i++) {
-            const dot = document.createElement('div');
-            dot.classList.add('dot');
-            dot.addEventListener('click', () => {
-                currentIndex = i;
-                updateSlider();
-            });
-            dotsContainer.appendChild(dot);
+        // Check if slider has images
+        if (totalImages === 0) {
+            const fallbackImage = document.createElement('img');
+            fallbackImage.src = "{% static 'images/default-banner.jpg' %}";
+            fallbackImage.alt = "Default Banner";
+            sliderImages.appendChild(fallbackImage);
         }
 
-        const dots = document.querySelectorAll('.dot');
-        dots[0].classList.add('active');
+        function initializeSlider() {
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalImages; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('main-page-dot');
+                dot.addEventListener('click', () => {
+                    currentIndex = i;
+                    updateSlider();
+                });
+                dotsContainer.appendChild(dot);
+            }
 
-        // Clone the first image and append it to the end for seamless looping
-        const firstImageClone = images[0].cloneNode(true);
-        sliderImages.appendChild(firstImageClone);
+            const dots = document.querySelectorAll('.main-page-dot');
+            dots[0].classList.add('active');
+
+            // Clone first image and append to end for smooth loop
+            const firstClone = images[0].cloneNode(true);
+            sliderImages.appendChild(firstClone);
+
+            // Start auto-sliding
+            if (sliderInterval) clearInterval(sliderInterval);
+            sliderInterval = setInterval(autoSlide, 5000);
+        }
 
         let currentIndex = 0;
 
         function updateSlider() {
+            if (totalImages === 0) return;
+            
+            const actualPosition = currentIndex % totalImages;
             sliderImages.style.transition = 'transform 1s ease-in-out';
             sliderImages.style.transform = `translateX(-${currentIndex * 100}%)`;
             
-            // Update dots
+            const dots = document.querySelectorAll('.main-page-dot');
             dots.forEach(dot => dot.classList.remove('active'));
-            dots[currentIndex % totalImages].classList.add('active');
+            dots[actualPosition].classList.add('active');
         }
 
         function autoSlide() {
+            if (totalImages === 0) return;
+            
             currentIndex++;
-            updateSlider();
-
-            if (currentIndex === totalImages) {
+            if (currentIndex >= totalImages) {
+                updateSlider();
                 setTimeout(() => {
                     sliderImages.style.transition = 'none';
-                    sliderImages.style.transform = 'translateX(0)';
                     currentIndex = 0;
-                    dots[0].classList.add('active');
+                    sliderImages.style.transform = 'translateX(0)';
+                    setTimeout(() => {
+                        sliderImages.style.transition = 'transform 1s ease-in-out';
+                    }, 50);
                 }, 1000);
+            } else {
+                updateSlider();
             }
         }
 
-        setInterval(autoSlide, 3000);
+        // Carousel functionality
+        const carousel = document.querySelector('.main-page-carousel');
+        const carouselItems = document.querySelectorAll('.main-page-carousel-item');
+        let carouselInterval;
 
-        let currentCarouselPosition = 0;
-        const carousel = document.querySelector('.carousel');
-        const items = document.querySelectorAll('.carousel-item');
-        const itemsPerView = 5;
-        const totalItems = items.length;
+        function initializeCarousel() {
+            if (carouselItems.length === 0) {
+                carousel.style.display = 'none';
+                return;
+            }
 
-        function moveCarousel(direction) {
+            const viewportWidth = window.innerWidth;
+            let itemsPerView = viewportWidth <= 768 ? 1 : 5;
             const itemWidth = carousel.offsetWidth / itemsPerView;
-            currentCarouselPosition += direction;
-            
-            // Handle wrapping
-            if (currentCarouselPosition < 0) {
-                currentCarouselPosition = totalItems - itemsPerView;
-            } else if (currentCarouselPosition > totalItems - itemsPerView) {
-                currentCarouselPosition = 0;
-            }
-            
-            // Smooth sliding transition
-            carousel.style.transform = `translateX(-${currentCarouselPosition * itemWidth}px)`;
-        }
+            let currentPosition = 0;
+            let isFirstLoop = true;
 
-        function autoSlideCategories() {
-            moveCarousel(1);
-        }
+            function moveCarousel(direction) {
+                const totalItems = carouselItems.length;
+                if (totalItems === 0) return;
 
-        // Initialize carousel
-        window.addEventListener('DOMContentLoaded', () => {
-            const slideInterval = setInterval(autoSlideCategories, 3000);
-            
-            carousel.addEventListener('mouseenter', () => {
-                clearInterval(slideInterval);
-            });
-            
-            carousel.addEventListener('mouseleave', () => {
-                setInterval(autoSlideCategories, 3000);
-            });
-        });
+                // Calculate next position
+                currentPosition += direction;
 
-        // Mobile-specific carousel code
-        function initMobileCarousel() {
-            if (window.innerWidth <= 768) {
-                const mobileCarousel = document.querySelector('.carousel');
-                const mobileItems = document.querySelectorAll('.carousel-item');
-                let currentPosition = 0;
-                
-                // Clone items for infinite scroll
-                mobileItems.forEach(item => {
-                    const clone = item.cloneNode(true);
-                    mobileCarousel.appendChild(clone);
-                });
-                
-                function slideNext() {
-                    currentPosition++;
-                    const slideWidth = mobileItems[0].offsetWidth;
-                    mobileCarousel.style.transform = `translateX(-${currentPosition * slideWidth}px)`;
-                    
-                    // Reset position when reaching end
-                    if (currentPosition >= mobileItems.length) {
-                        setTimeout(() => {
-                            mobileCarousel.style.transition = 'none';
-                            currentPosition = 0;
-                            mobileCarousel.style.transform = `translateX(0)`;
-                            setTimeout(() => {
-                                mobileCarousel.style.transition = 'transform 0.3s ease';
-                            }, 50);
-                        }, 300);
+                // Handle boundaries
+                if (currentPosition < 0) {
+                    if (!isFirstLoop) {
+                        currentPosition = totalItems - itemsPerView;
+                    } else {
+                        currentPosition = 0;
                     }
+                } else if (currentPosition > totalItems - itemsPerView) {
+                    if (isFirstLoop) {
+                        isFirstLoop = false;
+                    }
+                    currentPosition = 0;
                 }
 
-                // Start auto-sliding for mobile
-                const mobileInterval = setInterval(slideNext, 2000);
-
-                // Stop sliding when user interacts
-                mobileCarousel.addEventListener('touchstart', () => {
-                    clearInterval(mobileInterval);
-                });
-
-                // Resume sliding after interaction
-                mobileCarousel.addEventListener('touchend', () => {
-                    setInterval(slideNext, 2000);
-                });
+                // Apply transition
+                carousel.style.transition = 'transform 0.5s ease-in-out';
+                carousel.style.transform = `translateX(-${currentPosition * itemWidth}px)`;
             }
+
+            function startCarouselAutoSlide() {
+                if (carouselInterval) clearInterval(carouselInterval);
+                if (carouselItems.length <= itemsPerView) return;
+                
+                carouselInterval = setInterval(() => {
+                    if (currentPosition < carouselItems.length - itemsPerView || !isFirstLoop) {
+                        moveCarousel(1);
+                    }
+                }, 3000);
+            }
+
+            // Event listeners for carousel
+            carousel.addEventListener('mouseenter', () => clearInterval(carouselInterval));
+            carousel.addEventListener('mouseleave', startCarouselAutoSlide);
+
+            // Navigation button handlers
+            document.querySelector('.prev').addEventListener('click', () => {
+                clearInterval(carouselInterval);
+                moveCarousel(-1);
+                startCarouselAutoSlide();
+            });
+
+            document.querySelector('.next').addEventListener('click', () => {
+                clearInterval(carouselInterval);
+                moveCarousel(1);
+                startCarouselAutoSlide();
+            });
+
+            startCarouselAutoSlide();
         }
 
-        // Initialize mobile carousel on load and resize
-        window.addEventListener('DOMContentLoaded', initMobileCarousel);
+        // Initialize everything
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeSlider();
+            initializeCarousel();
+        });
+
+        // Reinitialize on resize
+        let resizeTimer;
         window.addEventListener('resize', () => {
-            if (window.innerWidth <= 768) {
-                initMobileCarousel();
-            }
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                initializeCarousel();
+            }, 250);
         });
     </script>
 {% endblock %}
