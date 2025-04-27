@@ -4,13 +4,13 @@
 <head>
     {% load static %}
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{% static 'images/placeholder.png' %}">
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
     <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Add CSRF token meta tag -->
-    <meta name="csrf-token" content="{{ csrf_token }}">
     {% csrf_token %}
     <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -62,9 +62,9 @@
                 <div class="search-results" id="search-results-big"></div>
             </div>
             <div class="contact-number">
-                <a href="tel:+919488674103">
+                <a href="tel:+918925453384">
                     <i class="fas fa-phone-alt"></i>
-                    +91 9488674103
+                    +91 8925453384
                 </a>
             </div>
             <div class="account-links">

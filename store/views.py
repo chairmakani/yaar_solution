@@ -1,3 +1,4 @@
+import re
 import time
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Max, Q, Sum, Count  # Add Sum, CountAdd Sum and Count
@@ -1194,44 +1195,24 @@ def verify_account(request):
 @csrf_protect
 @require_http_methods(["GET", "POST"])
 def register_view(request):
+    """Handle user registration with validation and OTP sending."""
     if request.method == "POST":
         try:
-            # Check content type
-            if request.content_type == 'application/json':
-                data = json.loads(request.body.decode('utf-8'))
-            else:
-                data = request.POST.dict()
-
-            # Validate required fields
-            required_fields = ['name', 'email', 'phone', 'password']
-            if not all(data.get(field) for field in required_fields):
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'All fields are required'
-                }, status=400)
+            data = json.loads(request.body.decode("utf-8")) if request.content_type == "application/json" else request.POST.dict()
             
-            # Check if email exists
+            # Email uniqueness check
             if User.objects.filter(email=data['email']).exists():
                 return JsonResponse({
-                    'status': 'error',
-                    'message': 'Email is already registered'
+                    "status": "error",
+                    "message": "Email already registered"
                 }, status=400)
 
-            # Check if phone exists
-            if UserProfile.objects.filter(phone_number=data['phone']).exists():
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Phone number is already registered'
-                }, status=400)
-
-            # Create user and profile
+            # Create user
             with transaction.atomic():
-                # Split name into first and last name
-                names = data['name'].split(' ', 1)
+                names = data['name'].strip().split(' ', 1)
                 first_name = names[0]
                 last_name = names[1] if len(names) > 1 else ''
-
-                # Create user
+                
                 user = User.objects.create_user(
                     username=data['email'],
                     email=data['email'],
@@ -1240,93 +1221,78 @@ def register_view(request):
                     last_name=last_name,
                     is_active=False
                 )
-
+                
                 # Update profile
                 profile = user.profile
                 profile.phone_number = data['phone']
                 profile.save()
 
-                # Store registration ID in session
+                # Store user ID in session and send OTP
                 request.session['registration_user_id'] = user.id
-
-                # Send verification email
-                if send_otp_email(data['email']):
+                if send_otp(data['email']):
                     return JsonResponse({
                         'status': 'success',
+                        'message': 'Registration successful! Redirecting to verification...',
                         'redirect_url': reverse('store:verify_otp')
                     })
                 else:
-                    raise ValidationError('Failed to send verification code')
+                    raise ValidationError("Failed to send verification code")
 
-        except json.JSONDecodeError:
-            return JsonResponse({
-                'status': 'error', 
-                'message': 'Invalid JSON data'
-            }, status=400)
-        except IntegrityError as e:
-            if 'UNIQUE constraint' in str(e):
-                field = 'email' if 'auth_user.username' in str(e) else 'phone number'
-                return JsonResponse({
-                    'status': 'error',
-                    'message': f'This {field} is already registered'
-                }, status=400)
-            raise
-        except ValidationError as e:
+        except IntegrityError:
             return JsonResponse({
                 'status': 'error',
-                'message': str(e)
+                'message': 'User with this email already exists'
             }, status=400)
         except Exception as e:
             logger.error(f"Registration error: {str(e)}")
             return JsonResponse({
                 'status': 'error',
-                'message': 'Registration failed. Please try again.'
+                'message': str(e) if isinstance(e, ValidationError) else 'Registration failed'
             }, status=400)
 
     return render(request, 'store/register.html')
 
 @ensure_csrf_cookie
-@csrf_protect
 def verify_otp_view(request):
-    """Handle OTP verification with proper request handling"""
-    if not request.session.get('registration_user_id'):
+    """Handle OTP verification with proper response handling"""
+    user_id = request.session.get('registration_user_id')
+    if not user_id:
         return redirect('store:register')
 
     try:
-        user = User.objects.get(
-            id=request.session['registration_user_id'],
-            is_active=False
-        )
-
+        user = User.objects.get(id=user_id, is_active=False)
+        
         if request.method == 'POST':
+            # Get complete OTP from form
             otp_code = request.POST.get('otp')
             
-            # Verify the OTP
             if check_otp(user.email, otp_code):
+                # Activate user and mark as verified
                 with transaction.atomic():
                     user.is_active = True
-                    user.save(update_fields=['is_active'])
-
-                    user.profile.email_verified = True
-                    user.profile.save(update_fields=['email_verified'])
-
-                    # Clear session data
+                    user.save()
+                    
+                    profile = user.profile
+                    profile.email_verified = True
+                    profile.save()
+                    
+                    # Clear session
                     request.session.pop('registration_user_id', None)
                     request.session.modified = True
-
+                    
                     # Log the user in
                     login(request, user)
-
+                    
                     return JsonResponse({
                         'status': 'success',
-                        'redirect_url': reverse('store:home'),
-                        'message': 'Account verified successfully!'
+                        'message': 'Account verified successfully!',
+                        'redirect_url': reverse('store:home')
                     })
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Invalid or expired OTP'
-                })
+                    'message': 'Invalid verification code'
+                }, status=400)
 
         return render(request, 'store/verify_otp.html', {
             'email': user.email,
@@ -1334,7 +1300,6 @@ def verify_otp_view(request):
         })
 
     except User.DoesNotExist:
-        messages.error(request, 'Invalid verification attempt')
         return redirect('store:register')
 
 def check_otp(email, otp_code):
@@ -1360,97 +1325,73 @@ def check_otp(email, otp_code):
         return False
 
 @require_POST
+@csrf_protect
 def resend_verification_codes(request):
-    """Handle resending of verification codes with rate limiting"""
+    """Resend OTPs with rate limiting."""
+    reg_user_id = request.session.get("registration_user_id")
+    if not reg_user_id:
+        return JsonResponse({"status": "error", "message": "Invalid session"}, status=400)
+
+    user = User.objects.filter(id=reg_user_id, is_active=False).first()
+    if not user:
+        return JsonResponse({"status": "error", "message": "No user found"}, status=404)
+
+    if cache.get(f"resend_timeout_{reg_user_id}"):
+        return JsonResponse(
+            {"status": "error", "message": "Please wait to request another code"}, status=429
+        )
+
+    if send_otp(user.email):
+        cache.set(f"resend_timeout_{reg_user_id}", True, 60)
+        return JsonResponse(
+            {"status": "success", "message": "OTP resent successfully!"}
+        )
+
+    return JsonResponse({"status": "error", "message": "Failed to resend OTP"}, status=500)
+
+
+def send_otp(email):
+    """Send an OTP email for user verification."""
     try:
-        # Get user from session
-        user_id = request.session.get('verification_user_id')
-        if not user_id:
-            raise ValidationError('Invalid session')
-        
-        user = User.objects.get(id=user_id)
-        
-        # Check rate limiting for resend
-        resend_key = f'resend_timeout_{user_id}'
-        if cache.get(resend_key):
-            raise ValidationError('Please wait before requesting new codes')
+        # Generate OTP
+        otp_code = get_random_string(length=6, allowed_chars="0123456789")
 
-        # Send new verification codes
-        email_code, phone_code = send_verification_codes(user)
-        
-        # Set resend timeout
-        cache.set(resend_key, True, settings.VERIFICATION_RATE_LIMIT['RESEND_TIMEOUT'])
+        # Remove any unused OTPs
+        OTP.objects.filter(email=email, is_verified=False).delete()
 
-        logger.info(f"Verification codes resent successfully for user {user_id}")
-        return JsonResponse({
-            'success': True,
-            'message': 'Verification codes sent successfully'
-        })
-        
-    except ValidationError as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        }, status=429)
-    except User.DoesNotExist:
-        logger.error(f"User not found for verification code resend: {user_id}")
-        return JsonResponse({
-            'success': False,
-            'message': 'User not found'
-        }, status=404)
-    except Exception as e:
-        logger.error(f"Error in resend_verification_codes: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'message': 'An error occurred'
-        }, status=500)
+        # Create new OTP record
+        expiry = timezone.now() + timezone.timedelta(minutes=10)
+        OTP.objects.create(email=email, otp=otp_code, expires_at=expiry)
 
-def send_otp(email, otp_code=None):
-    """Send OTP via email"""
-    try:
-        # Generate OTP if not provided
-        if not otp_code:
-            otp_code = get_random_string(length=6, allowed_chars='0123456789')
-            
-            # Delete any existing unverified OTPs for this email
-            OTP.objects.filter(
-                email=email,
-                is_verified=False
-            ).delete()
-            
-            # Create new OTP record
-            expiry = timezone.now() + timezone.timedelta(minutes=10)
-            OTP.objects.create(
-                email=email,
-                otp=otp_code,
-                expires_at=expiry
-            )
-        
-        # Send the email
+        # Send email
         send_mail(
-            subject='Your Verification Code',
-            message=f'Your verification code is: {otp_code}',
+            subject="Your Verification Code",
+            message=f"Your verification code is: {otp_code}",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
-        
         return True
     except Exception as e:
-        logger.error(f"Error sending OTP email: {str(e)}")
+        logger.error(f"Error sending OTP: {str(e)}")
         return False
 
+
 def check_otp(email, otp_code):
-    """New function to verify OTP correctly"""
+    """Verify an OTP code for the given email."""
     try:
-        otp_entry = OTP.objects.get(email=email, otp=otp_code, is_verified=False)
-        if otp_entry.expires_at < timezone.now():
-            return False
-        otp_entry.is_verified = True  # Mark OTP as used
-        otp_entry.save(update_fields=['is_verified'])
+        otp_entry = OTP.objects.get(
+            email=email,
+            otp=otp_code,
+            is_verified=False,
+            expires_at__gt=timezone.now(),
+        )
+        otp_entry.is_verified = True  # Mark as used
+        otp_entry.save(update_fields=["is_verified"])
         return True
     except OTP.DoesNotExist:
         return False
+
 
 def send_verification_codes(user):
     """Send verification codes via both email and SMS"""

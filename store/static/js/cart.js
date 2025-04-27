@@ -5,6 +5,7 @@ if (typeof window.CartUI === 'undefined') {
             this.items = new Map();
             this.modal = document.getElementById('removeModal');
             this.itemToRemove = null;
+            this.removeEndpoint = '/remove-from-cart/';  // Update endpoint
             this.initialize();
 
             // Add debounce for quantity updates
@@ -219,60 +220,69 @@ if (typeof window.CartUI === 'undefined') {
         }
 
         async removeConfirmedItem() {
-            if (!this.itemToRemove || !this.itemToRemove.key) {
+            if (!this.itemToRemove?.key || !this.itemToRemove?.element) {
                 this.showNotification('Invalid item selected for removal', 'error');
                 return;
             }
 
             try {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-                if (!csrfToken) {
-                    throw new Error('CSRF token not found');
-                }
+                if (!csrfToken) throw new Error('CSRF token not found');
 
-                const response = await fetch('/api/cart/remove/', {
+                const response = await fetch(this.removeEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
-                        'Accept': 'application/json'
+                        'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify({
-                        item_key: this.itemToRemove.key
-                    }),
-                    credentials: 'same-origin'
+                    body: JSON.stringify({ item_key: this.itemToRemove.key })
                 });
 
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Safely handle element removal
-                    const itemElement = this.itemToRemove.element;
-                    if (itemElement && itemElement.parentNode) {
-                        itemElement.classList.add('removing');
-                        
-                        // Update cart totals
-                        this.updateCartTotals(data.cart);
+                    // Animate and remove item
+                    this.itemToRemove.element.classList.add('removing');
+                    
+                    // Update cart UI
+                    this.updateCartTotals(data.cart);
+                    
+                    // Remove element after animation
+                    setTimeout(() => {
+                        if (this.itemToRemove?.element?.parentNode) {
+                            this.itemToRemove.element.remove();
+                            this.checkEmptyCart();
+                        }
+                        this.itemToRemove = null;
+                    }, 500);
 
-                        // Remove element after animation
-                        setTimeout(() => {
-                            if (itemElement.parentNode) {
-                                itemElement.remove();
-                                this.checkEmptyCart();
-                            }
-                        }, 500);
-
-                        this.showNotification('Item removed successfully', 'success');
-                    }
+                    this.showNotification('Item removed successfully', 'success');
                 } else {
                     throw new Error(data.message || 'Failed to remove item');
                 }
             } catch (error) {
                 console.error('Error removing item:', error);
-                this.showNotification(error.message || 'Error removing item', 'error');
+                this.showNotification(
+                    error.message || 'Failed to remove item. Please try again.',
+                    'error'
+                );
             } finally {
                 this.hideRemoveConfirmation();
             }
+        }
+
+        async removeItem(itemKey) {
+            if (!itemKey) return;
+            
+            const cartItem = document.querySelector(`[data-item-key="${itemKey}"]`);
+            if (!cartItem) return;
+
+            this.itemToRemove = {
+                element: cartItem,
+                key: itemKey
+            };
+
+            await this.removeConfirmedItem();
         }
 
         showNotification(message, type = 'info') {
@@ -307,32 +317,6 @@ if (typeof window.CartUI === 'undefined') {
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             });
-        }
-
-        async removeItem(item) {
-            try {
-                const itemKey = item.dataset.itemKey;
-                const response = await this.makeRequest('/api/cart/remove/', {
-                    method: 'POST',
-                    body: JSON.stringify({ item_key: itemKey })
-                });
-
-                if (response.success) {
-                    // Animate removal
-                    item.style.height = `${item.offsetHeight}px`;
-                    item.classList.add('removing');
-                    
-                    setTimeout(() => {
-                        item.remove();
-                        this.updateCartDisplay(response.cart);
-                        this.checkEmptyCart();
-                    }, 300);
-                }
-            } catch (error) {
-                NotificationManager.show('Failed to remove item', 'error');
-            } finally {
-                this.hideModal();
-            }
         }
 
         updateTotals(cartData) {
@@ -427,25 +411,38 @@ if (typeof window.CartUI === 'undefined') {
         }
 
         updateCartTotals(cartData) {
-            // Update subtotal
-            const subtotalElement = document.querySelector('.summary-row:first-child span:last-child');
-            if (subtotalElement && cartData.subtotal !== undefined) {
-                subtotalElement.textContent = `₹${cartData.subtotal}`;
+            if (!cartData) return;
+
+            // Update cart counts
+            ['cart-count', 'mobile-cart-count'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = cartData.total_items || '0';
+                    this.animateElement(element, 'bounce');
+                }
+            });
+
+            // Update cart total
+            const cartTotal = document.getElementById('cart-total');
+            if (cartTotal) {
+                cartTotal.textContent = `₹${cartData.total_amount || '0.00'}`;
+                this.animateElement(cartTotal, 'highlight');
             }
 
-            // Update total
-            const totalElement = document.querySelector('.summary-row.total span:last-child');
-            if (totalElement && cartData.total !== undefined) {
-                totalElement.textContent = `₹${cartData.total}`;
-            }
+            // Update subtotal and total in cart summary
+            const subtotal = document.querySelector('.summary-row:first-child span:last-child');
+            const total = document.querySelector('.summary-row.total span:last-child');
+            
+            if (subtotal) subtotal.textContent = `₹${cartData.subtotal || '0.00'}`;
+            if (total) total.textContent = `₹${cartData.total || '0.00'}`;
+        }
 
-            // Update header cart count
-            const cartCount = document.querySelector('#cart-count');
-            if (cartCount && cartData.total_items !== undefined) {
-                cartCount.textContent = cartData.total_items;
-                cartCount.classList.add('bounce');
-                setTimeout(() => cartCount.classList.remove('bounce'), 300);
-            }
+        animateElement(element, className) {
+            if (!element) return;
+            element.classList.remove(className);
+            void element.offsetWidth; // Trigger reflow
+            element.classList.add(className);
+            setTimeout(() => element.classList.remove(className), 300);
         }
     }
 }

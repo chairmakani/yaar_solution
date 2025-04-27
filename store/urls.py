@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from .api import check_stock
 
 app_name = 'store'  # Add namespace
 
@@ -37,7 +38,7 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),  # Fix view name
     path('resend-codes/', views.resend_verification_codes, name='resend_codes'),
     path('send-otp/', views.send_otp, name='send_otp'),
-    path('api/stock/check/', views.check_stock, name='check_stock'),
+    path('api/stock/check/', check_stock, name='check_stock'),
     path('api/profile/update/', views.update_profile, name='update_profile'),
     path('about/', views.about, name='about'),
     path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
@@ -46,4 +47,8 @@ urlpatterns = [
     path('return-and-cancellation-policy/', views.return_and_cancellation_policy, name='return-and-cancellation-policy'),
     path('contact/', views.contact_view, name='contact'),
     path('contact/submit/', views.contact_submit, name='contact_submit'),
+    path('add-to-cart/', views.add_to_cart, name='add_to_cart'),
+    path('check-stock/', views.check_stock, name='check_stock'),
+    path('update-cart/', views.update_cart, name='update_cart'),
+    path('remove-from-cart/', views.remove_from_cart, name='remove_from_cart'),
 ]

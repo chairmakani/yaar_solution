@@ -1,6 +1,16 @@
 class ShopManager {
     constructor() {
-        this.initializeShop();
+        // Wait for cart utils to be available
+        this.waitForDependencies().then(() => {
+            this.initializeShop();
+        });
+    }
+
+    async waitForDependencies() {
+        // Wait for cartUtils to be defined
+        while (!window.cartUtils) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
     }
 
     initializeShop() {
@@ -11,6 +21,7 @@ class ShopManager {
             this.initLazyLoading();
             this.initSearchHandlers();
             this.initDropdowns();
+            this.setupCartHandlers();
         });
     }
 
@@ -157,7 +168,40 @@ class ShopManager {
     hideDropdown(menu) {
         menu.classList.remove('show');
     }
+
+    setupCartHandlers() {
+        if (!window.cartUtils) {
+            console.error('cartUtils not found');
+            return;
+        }
+
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const btn = e.currentTarget;
+                const productId = btn.dataset.productId;
+                const quantityInput = btn.closest('.product-actions')
+                    .querySelector('.quantity-input');
+                const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+                try {
+                    window.cartUtils.updateCartButton(btn, true);
+                    const response = await window.cartUtils.addToCart(productId, quantity);
+                    window.cartUtils.updateCartButton(btn, false, true);
+                    
+                    if (response.success) {
+                        window.showNotification('Added to cart successfully', 'success');
+                    }
+                } catch (error) {
+                    window.cartUtils.updateCartButton(btn, false);
+                    window.showNotification(error.message || 'Failed to add to cart', 'error');
+                }
+            });
+        });
+    }
 }
 
-// Initialize shop manager
-const shopManager = new ShopManager();
+// Initialize shop manager only after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.shopManager = new ShopManager();
+});

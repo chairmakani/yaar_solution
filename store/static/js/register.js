@@ -147,42 +147,52 @@ class RegisterForm {
         }
         
         this.setLoading(true);
+        const errorContainer = document.getElementById('error-container');
+        const errorMessage = document.getElementById('error-message');
         
         try {
-            const formData = new FormData(this.form);
-            const maxRetries = 3;
-            let retryCount = 0;
+            // Get CSRF token from cookie
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            while (retryCount < maxRetries) {
-                try {
-                    const response = await fetchWithCSRF(this.form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        this.showNotification('Registration successful!', 'success');
-                        window.location.href = data.redirect_url;
-                        return;
-                    } else {
-                        throw new Error(data.message || 'Registration failed');
+            // Create form data
+            const formData = new FormData(this.form);
+            const jsonData = Object.fromEntries(formData.entries());
+            
+            const response = await fetch(this.form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',  // Important for CSRF
+                body: JSON.stringify(jsonData)
+            });
+
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    errorContainer.className = 'success-container';
+                    if (errorMessage) {
+                        errorMessage.textContent = data.message || 'Registration successful! Redirecting...';
                     }
-                } catch (error) {
-                    if (error.message.includes('database is locked') && retryCount < maxRetries - 1) {
-                        retryCount++;
-                        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                        continue;
-                    }
-                    throw error;
                 }
+                
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Registration failed');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
+            if (errorContainer && errorMessage) {
+                errorContainer.style.display = 'block';
+                errorContainer.className = 'error-container';
+                errorMessage.textContent = error.message;
+            }
+            console.error('Registration error:', error);
         } finally {
             this.setLoading(false);
         }

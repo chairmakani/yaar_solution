@@ -40,8 +40,13 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" class="form-control" required>
         </div>
-        <button type="submit" class="auth-btn">
-            <i class="fas fa-sign-in-alt"></i> Login
+        <button type="submit" class="auth-btn" id="login-button">
+            <span class="button-text">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </span>
+            <span class="button-loader" style="display: none;">
+                <i class="fas fa-circle-notch fa-spin"></i> Logging in...
+            </span>
         </button>
     </form>
 
@@ -72,6 +77,9 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const buttonText = loginButton.querySelector('.button-text');
+        const buttonLoader = loginButton.querySelector('.button-loader');
         const otpModal = document.getElementById('otp-modal');
         const otpInputs = document.querySelectorAll('.otp-input');
         const otpForm = document.getElementById('otp-form');
@@ -111,10 +119,23 @@
         function closeModal() {
             otpModal.classList.remove('show');
         }
+
+        // Function to set loading state
+        function setLoading(isLoading) {
+            loginButton.disabled = isLoading;
+            buttonText.style.display = isLoading ? 'none' : 'block';
+            buttonLoader.style.display = isLoading ? 'block' : 'none';
+            if (isLoading) {
+                loginButton.classList.add('loading');
+            } else {
+                loginButton.classList.remove('loading');
+            }
+        }
     
         // Handle login form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            setLoading(true);
             
             try {
                 const formData = new FormData(form);
@@ -145,6 +166,8 @@
             } catch (error) {
                 console.error('Login error:', error);
                 showNotification('An error occurred during login', 'error');
+            } finally {
+                setLoading(false);
             }
         });
     
@@ -201,6 +224,5 @@
             closeButton.addEventListener('click', closeModal);
         }
     });
-    </script>
-    
+</script>
 {% endblock %}

@@ -1,615 +1,252 @@
-<!-- filepath: /e:/yaarsolution_project/ecommerce/store/templates/base.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {% load static %}
-    <!-- Favicon -->
-    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
-    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Add CSRF token meta tag -->
-    <meta name="csrf-token" content="{{ csrf_token }}">
-    {% csrf_token %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/footer.css' %}">
-    <link rel="stylesheet" href="{% static 'css/search.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
-    <link rel="stylesheet" href="{% static 'css/global-loader.css' %}">
-    <title>{% block title %}{% endblock title%}</title>
-    <style>
-    
-    </style>
-</head>
-<body>
-    <!-- Wrap all content -->
-    <div class="content-loader">
-        <!-- Add this right after <body> tag -->
-        <div id="notification-container" class="notification-container"></div>
-        <form id="csrf-form" style="display:none">
-            {% csrf_token %}
-        </form>
-        
-        {% block extra_css %}
-        <link rel="stylesheet" href="{% static 'css/cart-animations.css' %}">
-        <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-        <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
-        <link rel="stylesheet" href="{% static 'css/whatsapp-button.css' %}">
-        {% endblock extra_css %}
-        {% block content %}
-        <nav class="navbar">
-            <a href="{% url 'store:main' %}" class="logo">
-                <span class="logo-main">YAAR</span>
-                <span class="logo-subtext">Empowering Communities</span>
-            </a>
-            <div class="nav-icons">
-                <i class="fas fa-search icon" id="search-toggle"></i>
-                <i class="fas fa-bars icon" id="menu-toggle"></i>
-            </div>
-            <!-- Search Bar big screen -->
-            <div class="search-container">
-                <form action="{% url 'store:product_search' %}" method="GET" class="search-form" id="search-form-big">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="query" id="search-box-big" placeholder="Search for products...">
-                </form>
-                <div class="search-results" id="search-results-big"></div>
-            </div>
-            <div class="contact-number">
-                <a href="tel:+919488674103">
-                    <i class="fas fa-phone-alt"></i>
-                    +91 9488674103
-                </a>
-            </div>
-            <div class="account-links">
-                {% if user.is_authenticated %}
-                    <div class="profile-nav">
-                        <div class="profile-toggle">
-                            {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}">
-                            {% else %}
-                                <i class="fas fa-user"></i> Account
-                            {% endif %}
-                        </div>
-                        <div class="profile-menu">
-                            <div class="profile-header">
-                                <div class="profile-name">{{ user.get_full_name }}</div>
-                                <div class="profile-email">{{ user.email }}</div>
-                            </div>
-                            <div class="profile-menu-items">
-                                <a href="{% url 'store:profile' %}">
-                                    <i class="fas fa-user"></i> My Profile
-                                </a>
-                                <a href="{% url 'store:orders' %}">
-                                    <i class="fas fa-shopping-bag"></i> My Orders
-                                </a>
-                                <a href="{% url 'store:settings' %}">
-                                    <i class="fas fa-cog"></i> Settings
-                                </a>
-                                <div class="menu-divider"></div>
-                                <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: inline;">
-                                    {% csrf_token %}
-                                    <a href="#" onclick="showLogoutConfirm(event)" class="text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </a>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="auth-buttons">
-                        <a href="{% url 'store:login' %}" class="btn-login">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Login</span>
-                        </a>
-                        <a href="{% url 'store:register' %}" class="btn-register">
-                            <i class="fas fa-user-plus"></i>
-                            <span>Register</span>
-                        </a>
-                    </div>
-                {% endif %}
-            </div>
-            <div class="cart-details">
-                <a href="{% url 'store:cart' %}" class="cart-link">
-                    <div class="cart-container" id="cart-trigger">
-                        <span class="cart-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count" id="cart-count">{{ cart.total_items|default:0 }}</span>
-                        </span>
-                        <span class="cart-total" id="cart-total">₹{{ cart.total_amount|default:"0.00" }}</span>
-                    </div>
-                </a>
-            </div>
-        </nav>
-        <!-- Second Navbar -->
-        <nav class="second-navbar">
-            <ul class="nav-menu">
-                <li><a href="{% url 'store:main' %}"><i class="fas fa-home"></i> Home</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">
-                        <span>Categories</span>
-                        <span class="dropdown-icon"></span>
-                    </a>
-                    <div class="dropdown-menu">
-                        {% for category in categories %}
-                        <div class="dropdown-column">
-                            <a href="{% url 'store:category_products' category.id %}">
-                                <span class="category-name">{{ category.name }}</span>
-                                (<span class="product-count">{{ category.products.count }}</span>)
-                            </a>
-                            {% for subcategory in category.subcategories %}
-                            <a href="{% url 'store:category_products' subcategory.id %}" class="subcategory-item">
-                                <span>{{ subcategory.name }}</span>
-                                <span class="product-count">{{ subcategory.products.count }}</span>
-                            </a>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </li>
-                <ul class="nav-menu-ngos">
-                    <li class="dropdown-ngos">
-                        <a href="#">
-                            <span>NGOs</span>
-                            <span class="dropdown-icon">&#x25BC;</span>
-                        </a>
-                        <ul class="dropdown-menu-ngos">
-                            {% for location, ngos in ngo_menu.items %}
-                            <li class="dropdown-ngos">
-                                <a href="#">{{ location }}</a>
-                                <ul class="sub-dropdown-menu">
-                                    {% for ngo in ngos %}
-                                    <li>
-                                        <a href="{{ ngo.get_absolute_url }}">
-                                            {{ ngo.shg_name }} 
-                                            <small>({{ ngo.contact_person }})</small>
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
-                <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
-                <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone"></i> Contact Us</a></li>
-            </ul>
-        </nav>
-        <!-- Search Bar small screen-->
-        <div class="search-bar-container" id="search-bar">
-            <form action="{% url 'store:product_search' %}" method="GET" id="search-form-mobile" onsubmit="return handleSearch(event, 'search-bar-mobile')">
-                <input type="text" name="query" id="search-bar-mobile" placeholder="Search for products...">
-                <i class="fas fa-times cancel-btn" id="cancel-search"></i>
-                <button type="submit" id="search-submit-mobile">Search</button>
-            </form>
-            <div class="search-results" id="search-results-mobile"></div>
-        </div>
-        
-        <!-- Sidebar -->
-        <div class="menu-sidebar" id="menu-sidebar">
-            <span class="close-btn" id="close-sidebar">&times;</span>
-            <!-- Sidebar Tabs -->
-            <div class="tabs">
-                <button class="tab-button active" id="categories-tab">Categories</button>
-                <button class="tab-button" id="ngos-tab">NGOs</button>
-                <button class="tab-button" id="profile-tab">Profile</button>
-            </div>
-            <!-- Sidebar Content -->
-            <div class="menu-content">
-                <div class="tab-content active" id="categories-content">
-                    <ul>
-                        {% for category in categories %}
-                        <li>
-                            <a href="{% url 'store:category_products' category.id %}"  style="text-decoration: none; color: inherit;">
-                                <span class="category-name">{{ category.name }}</span>
-                                (<span class="product-count">{{ category.products.count }}</span>)
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-               
-                </div>
-                
-                <!-- Add NGOs Tab Content -->
-                <div class="tab-content" id="ngos-content">
-                    <ul class="sidebar-ngo-locations">
-                        {% for location, ngos in ngo_menu.items %}
-                        <li class="sidebar-ngo-location">
-                            <a href="#" class="ngo-location-toggle">
-                                {{ location }}
-                                <i class="fas fa-chevron-down toggle-icon"></i>
-                            </a>
-                            <ul class="sidebar-ngo-items">
-                                {% for ngo in ngos %}
-                                <li>
-                                    <a href="{{ ngo.get_absolute_url }}">
-                                        {{ ngo.shg_name }}
-                                        <small>({{ ngo.contact_person }})</small>
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                
-                <div class="tab-content" id="profile-content">
-                    <ul>
-                        {% if user.is_authenticated %}
-                            <li><a href="{% url 'store:profile' %}"><i class="fas fa-user"></i> My Profile</a></li>
-                            <li><a href="{% url 'store:orders' %}"><i class="fas fa-shopping-bag"></i> My Orders</a></li>
-                            <li><a href="{% url 'store:settings' %}"><i class="fas fa-cog"></i> Settings</a></li>
-                            <li>
-                                <form id="mobile-logout-form" action="{% url 'logout' %}" method="POST" style="display: inline;">
-                                    {% csrf_token %}
-                                    <a href="#" onclick="showLogoutConfirm(event)" class="text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </a>
-                                </form>
-                            </li>
-                        {% else %}
-                            <li><a href="{% url 'store:login' %}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-                            <li><a href="{% url 'store:register' %}"><i class="fas fa-user-plus"></i> Register</a></li>
-                        {% endif %}
-                        <li><a href="#"><i class="fas fa-phone"></i> Contact Us</a></li>
-                    </ul>
-                </div>
-            </div>
-            <!-- Sidebar Footer -->
-            <div class="sidebar-footer">
-                <a href="#">WhatsApp</a>
-                <a href="#">Twitter</a>
-            </div>
-        </div>
+import json
+import logging
+import re
+from django.conf import settings
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.db import transaction, IntegrityError
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+from django.contrib.auth import login
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods, require_POST
+from yourapp.models import User, OTP  # Adjust model imports as needed
 
-        <footer style="margin-top: 250px;">
-            <div class="fixed-footer" style="display: none;">
-                <a href="{% url 'store:main' %}" class="footer-item">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="{% url 'store:cart' %}" class="footer-item" id="mobile-cart-trigger">
-                    <i class="fas fa-cart-plus"></i>
-                    <span>Cart</span>
-                    <span class="badge" id="mobile-cart-count">{{ cart.total_items|default:0 }}</span>
-                </a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'store:profile' %}" class="footer-item">
-                        {% if user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="avatar-mini">
-                        {% else %}
-                            <i class="fas fa-user"></i>
-                        {% endif %}
-                        <span>Account</span>
-                    </a>
-                {% else %}
-                    <a href="{% url 'store:login' %}" class="footer-item">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Login/Register</span>
-                    </a>
-                {% endif %}
-            </div>
-        </footer>
+logger = logging.getLogger(__name__)
 
-        <style>
-            @media screen and (max-width: 768px) {
-                .fixed-footer {
-                    display: flex !important;
-                }
-            }
-        </style>
-        
-        {% endblock content %}
+# ----------------------------- Registration View -----------------------------
 
-        <div class='main-content-wrapper'>
-            {% block content2 %}{% endblock content2 %}
+@ensure_csrf_cookie
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def register_view(request):
+    """Handle user registration with validation, user creation, and OTP sending."""
+    if request.method == "POST":
+        # Validate content type
+        if request.content_type not in [
+            "application/json",
+            "application/x-www-form-urlencoded",
+            "multipart/form-data",
+        ]:
+            return JsonResponse(
+                {"status": "error", "message": "Unsupported content type"}, status=400
+            )
 
-            <div class="footer-container">
-                <div class="small-images">
-                    <div class="service-container">
-                        <p><b>Courier Partners</b></p>
-                        <img src="{% static 'images/courier.png' %}" alt="Courier service">
-                    </div>
-                    <div class="vertical-line"></div>
-                    <div class="service-container">
-                        <p><b>Payment Options</b></p>
-                        <img src="{% static 'images/payment.jpg' %}" alt="Payment options">
-                    </div>
-                </div>
-                <div class="fssai-logo">
-                    <img src="{% static 'images/Fssai_Logo.jpg' %}" 
-                         alt="FSSAI logo">
-                </div>
-                
-                <div class="info">
-                    <h3>Address</h3><br>
-                    <p><span class="address-part">Yaar Solution,No.175c/6, Munthal Road, Punnaiyapuram,</span> 
-                       <span class="address-part">Puliyankudi, Tenkasi Dt.-627 751. Tamilnadu</span></p>
-                    <p>Phone: <a href="tel:+919488674103">+91 9488674103</a></p>
-                    <p><a href="https://www.yaar.co.in" target="_blank">www.yaar.co.in</a></p>
-                </div>
-                <p class="email-contact"><i class="fa-solid fa-envelope"></i> <a href="mailto:yaarsolution@gmail.com">yaarsolution@gmail.com</a></p>
-                <div class="icon">
-                    <p><a href="https://g.co/kgs/TVhzyut" target="_blank"><i class="fa-brands fa-google" style="color: blue;"></i></a></p>
-                    <p><a href="https://www.instagram.com/yaarsolutions/" target="_blank"><i class="fa-brands fa-square-instagram" style="color:rgb(212, 62, 90);"></i></a></p>
-                    <p><a href="https://www.linkedin.com/company/yaarsolutions/" target="_blank"><i class="fa-brands fa-linkedin" style="color:rgb(48, 162, 238);"></i></a></p>
-                    <p><a href="https://youtube.com/@yaarsolutions?si=Yoauh-yJ6revii2Q" target="_blank"><i class="fa-brands fa-youtube" style="color: red;"></i></a></p>
-                    <p><a href="https://www.facebook.com/yaarsolutions" target="_blank"><i class="fa-brands fa-facebook" style="color:rgb(28, 76, 181);"></i></a></p>
-                    <p><a href="https://wa.me/+919488674103" target="_blank"><i class="fa-brands fa-whatsapp" style="color: green;"></i></a></p>
-                </div>
-                
-                <div class="policy-links">
-                    <a href="{% url 'store:privacy_policy' %}">Privacy Policy</a>
-                    <a href="{% url 'store:shipping_policy' %}">Shipping Policy</a>
-                    <a href="{% url 'store:terms_policy' %}">Terms Policy</a>
-                    <a href="{% url 'store:return_and_cancellation_policy' %}">Return and Cancellation Policy</a>
-                </div>
-            </div>
-            <br><br><br>
+        # Parse request data
+        try:
+            if request.content_type == "application/json":
+                data = json.loads(request.body.decode("utf-8"))
+            else:
+                data = request.POST.dict()
+        except json.JSONDecodeError:
+            return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
-            {% block content3 %}
-            {% endblock content3 %}
+        # Validate required fields
+        required_fields = ["name", "email", "phone", "password"]
+        for field in required_fields:
+            if field not in data or not str(data[field]).strip():
+                return JsonResponse(
+                    {"status": "error", "message": f"{field.capitalize()} is required"},
+                    status=400,
+                )
 
-            {% block content4 %}
-            {% endblock content4 %}
-        </div>
+        # Validate name
+        names = data["name"].strip().split(" ", 1)
+        if len(names) < 1 or not names[0]:
+            return JsonResponse(
+                {"status": "error", "message": "Full name must contain at least a first name"},
+                status=400,
+            )
 
-        <!-- Fixed Action Buttons -->
-        <a href="https://wa.me/+919488674103" class="whatsapp-btn hidden" aria-label="Contact on WhatsApp" target="_blank">
-            <i class="fab fa-whatsapp"></i>
-        </a>
-        <!-- Add Scroll to Top Button -->
+        # Validate email uniqueness
+        if User.objects.filter(username=data["email"]).exists():
+            return JsonResponse({"status": "error", "message": "Email already registered"}, status=400)
 
-        <button class="scroll-top-btn" aria-label="Scroll to top">
-            <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 15l-6-6-6 6"/>
-            </svg>
-        </button>
+        # Validate phone number
+        if not re.match(r"^\d{10}$", data["phone"]):
+            return JsonResponse(
+                {"status": "error", "message": "Invalid phone number. Must be 10 digits."},
+                status=400,
+            )
 
-        {% block extra_js %}
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        <script src="{% static 'js/csrf.js' %}"></script>
-        <script src="{% static 'js/scripts.js' %}"></script>
-        <script src="{% static 'js/search.js' %}"></script>
-        <script src="{% static 'js/cart.js' %}"></script>
-        <script src="{% static 'js/base.js' %}"></script>
-        <script src="{% static 'js/footer.js' %}"></script>
-        <script src="{% static 'js/whatsapp-button.js' %}"></script>
-        <script src="{% static 'js/cart-state.js' %}"></script>
-        <script src="{% static 'js/quantity-manager.js' %}"></script>
-        <script src="{% static 'js/cart-animations.js' %}"></script>
-        <script src="{% static 'js/loader.js' %}"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Function to update cart UI
-                function updateCartDisplay(cartData) {
-                    // Update cart count and total
-                    const cartCount = document.getElementById('cart-count');
-                    const cartTotal = document.getElementById('cart-total');
-                    const subtotalAmount = document.querySelector('.subtotal-amount');
-                    
-                    if (cartCount) {
-                        cartCount.classList.remove('bounce');
-                        void cartCount.offsetWidth; // Trigger reflow
-                        cartCount.classList.add('bounce');
-                        cartCount.textContent = cartData.total_items;
+        # Handle user creation
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=data["email"],
+                    email=data["email"],
+                    password=data["password"],
+                    first_name=names[0],
+                    last_name=names[1] if len(names) > 1 else "",
+                    is_active=False,
+                )
+
+                # Update user profile
+                profile = user.profile
+                profile.phone_number = data["phone"]
+                profile.save()
+
+                # Save registration user ID in session
+                request.session["registration_user_id"] = user.id
+
+                # Attempt to send OTP
+                if not send_otp(data["email"]):
+                    raise ValidationError("Failed to send OTP. Please check the email.")
+
+                return JsonResponse(
+                    {
+                        "status": "success",
+                        "message": "Registration successful! Redirecting to verification...",
+                        "redirect_url": reverse("store:verify_otp"),
                     }
-                    
-                    if (cartTotal) {
-                        cartTotal.textContent = ₹${cartData.total_amount};
+                )
+        except IntegrityError:
+            logger.error("Integrity error during registration")
+            return JsonResponse(
+                {"status": "error", "message": "User with this email already exists"},
+                status=400,
+            )
+        except ValidationError as ve:
+            logger.error(f"Validation error during registration: {ve}")
+            return JsonResponse({"status": "error", "message": str(ve)}, status=400)
+        except Exception as e:
+            logger.exception(f"Unexpected error during registration: {str(e)}")
+            return JsonResponse(
+                {"status": "error", "message": "Failed to register user. Try again."},
+                status=400,
+            )
+
+    # Render registration form for GET request
+    return render(request, "store/register.html")
+
+
+# ------------------------- OTP Verification View -----------------------------
+
+@ensure_csrf_cookie
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def verify_otp_view(request):
+    """Handle OTP verification for user activation."""
+    reg_user_id = request.session.get("registration_user_id")
+    if not reg_user_id:
+        return redirect("store:register")
+
+    try:
+        user = User.objects.get(id=reg_user_id, is_active=False)
+    except User.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "Invalid verification attempt"}, status=400
+        )
+
+    if request.method == "POST":
+        otp_code = request.POST.get("otp")
+        if not otp_code:
+            return JsonResponse(
+                {"status": "error", "message": "OTP is required."}, status=400
+            )
+
+        if check_otp(user.email, otp_code):
+            with transaction.atomic():
+                user.is_active = True
+                user.save(update_fields=["is_active"])
+
+                user.profile.email_verified = True
+                user.profile.save(update_fields=["email_verified"])
+
+                # Clear session
+                request.session.pop("registration_user_id", None)
+                request.session.modified = True
+
+                # Log the user in
+                login(request, user)
+
+                return JsonResponse(
+                    {
+                        "status": "success",
+                        "message": "Account verified successfully!",
+                        "redirect_url": reverse("store:home"),
                     }
+                )
+        else:
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP"}, status=400)
 
-                    if (subtotalAmount) {
-                        subtotalAmount.textContent = ₹${cartData.total_amount};
-                    }
-                }
+    return render(
+        request,
+        "store/verify_otp.html",
+        {"email": user.email, "resend_available": True},
+    )
 
-                // Function to show notifications
-                function showNotification(message, type = 'success') {
-                    NotificationManager.show(message, type);
-                }
 
-                // Listen for custom cart update events
-                document.addEventListener('cartUpdated', function(e) {
-                    updateCartDisplay(e.detail);
-                });
+# --------------------------- OTP Sending Logic -------------------------------
 
-                // Make functions globally available
-                window.updateCartDisplay = updateCartDisplay;
-                window.showNotification = showNotification;
-            });
+def send_otp(email):
+    """Send an OTP email for user verification."""
+    try:
+        # Generate OTP
+        otp_code = get_random_string(length=6, allowed_chars="0123456789")
 
-            // Global notification manager
-            window.NotificationManager = {
-                container: document.getElementById('notification-container'),
-                
-                show: function(message, type = 'success', duration = 3000) {
-                    const notification = document.createElement('div');
-                    notification.className = notification ${type};
-                    
-                    notification.innerHTML = `
-                        <div class="notification-content">
-                            <div class="notification-icon">
-                                <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                                                  type === 'warning' ? 'exclamation-triangle' : 
-                                                  'exclamation-circle'}"></i>
-                            </div>
-                            <div class="notification-text">
-                                <p class="notification-title">
-                                    ${type.charAt(0).toUpperCase() + type.slice(1)}
-                                </p>
-                                <p class="notification-message">${message}</p>
-                            </div>
-                        </div>
-                    `;
+        # Remove any unused OTPs
+        OTP.objects.filter(email=email, is_verified=False).delete()
 
-                    this.container.appendChild(notification);
-                    
-                    // Trigger entrance animation
-                    requestAnimationFrame(() => {
-                        notification.classList.add('show');
-                    });
+        # Create new OTP record
+        expiry = timezone.now() + timezone.timedelta(minutes=10)
+        OTP.objects.create(email=email, otp=otp_code, expires_at=expiry)
 
-                    // Remove notification after duration
-                    setTimeout(() => {
-                        notification.classList.remove('show');
-                        setTimeout(() => {
-                            notification.remove();
-                        }, 300);
-                    }, duration);
-                }
-            };
+        # Send email
+        send_mail(
+            subject="Your Verification Code",
+            message=f"Your verification code is: {otp_code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error sending OTP: {str(e)}")
+        return False
 
-            // Update existing showNotification function to use NotificationManager
-            window.showNotification = function(message, type) {
-                NotificationManager.show(message, type);
-            };
 
-            // Global cart update handler
-            window.updateCartUI = function(cartData) {
-                const counts = document.querySelectorAll('.cart-count');
-                const totals = document.querySelectorAll('.cart-total');
-                const mobileCount = document.getElementById('mobile-cart-count');
-                
-                const formattedTotal = new Intl.NumberFormat('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                    minimumFractionDigits: 2
-                }).format(cartData.total_amount);
+def check_otp(email, otp_code):
+    """Verify an OTP code for the given email."""
+    try:
+        otp_entry = OTP.objects.get(
+            email=email,
+            otp=otp_code,
+            is_verified=False,
+            expires_at__gt=timezone.now(),
+        )
+        otp_entry.is_verified = True  # Mark as used
+        otp_entry.save(update_fields=["is_verified"])
+        return True
+    except OTP.DoesNotExist:
+        return False
 
-                counts.forEach(count => {
-                    count.textContent = cartData.total_items;
-                    count.classList.add('bounce');
-                    setTimeout(() => count.classList.remove('bounce'), 1000);
-                });
 
-                totals.forEach(total => {
-                    total.textContent = formattedTotal;
-                    total.classList.add('highlight');
-                    setTimeout(() => total.classList.remove('highlight'), 1000);
-                });
+@require_POST
+@csrf_protect
+def resend_verification_codes(request):
+    """Resend OTPs with rate limiting."""
+    reg_user_id = request.session.get("registration_user_id")
+    if not reg_user_id:
+        return JsonResponse({"status": "error", "message": "Invalid session"}, status=400)
 
-                if (mobileCount) {
-                    mobileCount.textContent = cartData.total_items;
-                }
-            };
+    user = User.objects.filter(id=reg_user_id, is_active=False).first()
+    if not user:
+        return JsonResponse({"status": "error", "message": "No user found"}, status=404)
 
-            // Listen for cart update events
-            document.addEventListener('cartUpdated', function(e) {
-                updateCartUI(e.detail);
-            });
+    if cache.get(f"resend_timeout_{reg_user_id}"):
+        return JsonResponse(
+            {"status": "error", "message": "Please wait to request another code"}, status=429
+        )
 
-            function showLogoutConfirm(event) {
-                event.preventDefault();
-                document.getElementById('logout-modal').style.display = 'flex';
-            }
+    if send_otp(user.email):
+        cache.set(f"resend_timeout_{reg_user_id}", True, 60)
+        return JsonResponse(
+            {"status": "success", "message": "OTP resent successfully!"}
+        )
 
-            function closeLogoutModal() {
-                document.getElementById('logout-modal').style.display = 'none';
-            }
-
-            function submitLogout() {
-                const form = document.getElementById('logout-form');
-                if (form) {
-                    // Get CSRF token
-                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                    
-                    // Submit form with CSRF token
-                    fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        credentials: 'same-origin'
-                    }).then(response => {
-                        if (response.ok) {
-                            window.location.href = "{% url 'store:login' %}";
-                        }
-                    });
-                }
-            }
-
-            // Close modal when clicking outside
-            window.onclick = function(event) {
-                const modal = document.getElementById('logout-modal');
-                if (event.target == modal) {
-                    closeLogoutModal();
-                }
-            }
-
-            // Initialize CSRF protection
-            document.addEventListener('DOMContentLoaded', function() {
-                setupCSRFToken();
-            });
-        </script>
-        {% endblock extra_js %}
-    </div>
-</div>
-
-<!-- Modal markup -->
-<div id="logout-modal" class="modal">
-    <div class="modal-content">
-        <h3>Confirm Logout</h3>
-        <p>Are you sure you want to logout?</p>
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
-            <button class="btn-confirm" onclick="submitLogout()">Logout</button>
-        </div>
-    </div>
-</div>
-
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-cancel, .btn-confirm {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.btn-cancel {
-    background-color: #6c757d;
-    color: white;
-}
-
-.btn-confirm {
-    background-color: #dc3545;
-    color: white;
-}
-</style>
-</body>
-</html>
+    return JsonResponse({"status": "error", "message": "Failed to resend OTP"}, status=500)

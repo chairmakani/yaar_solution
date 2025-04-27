@@ -20,7 +20,7 @@
 
             <form id="register-form" method="POST" action="{% url 'store:register' %}" class="register-form" novalidate>
                 {% csrf_token %}
-                
+                <!-- Important: Ensure CSRF token is present -->
                 <div class="form-group-wrapper">
                     <div class="form-group">
                         <label for="name">Full Name<span class="required">*</span></label>
@@ -73,8 +73,8 @@
                             <input type="checkbox" id="terms" name="terms" required>
                             <label for="terms">
                                 <span class="checkmark"></span>
-                                I agree to the <a href="{% url 'store:terms_policy' %}" target="_blank" rel="noopener">Terms</a> and 
-                                <a href="{% url 'store:privacy_policy' %}" target="_blank" rel="noopener">Privacy Policy</a>
+                                I agree to the <a href="{% url 'store:terms-policy' %}" target="_blank" rel="noopener">Terms</a> and 
+                                <a href="{% url 'store:privacy-policy' %}" target="_blank" rel="noopener">Privacy Policy</a>
                             </label>
                         </div>
                         <span class="error-message"></span>
@@ -95,64 +95,8 @@
 </div>
 
 <script>
-document.getElementById('register-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const errorContainer = document.getElementById('error-container');
-    const errorMessage = document.getElementById('error-message');
-    const submitButton = document.querySelector('.register-button');
-    
-    try {
-        // Clear previous errors
-        errorContainer.style.display = 'none';
-        errorMessage.textContent = '';
-
-        // Disable submit button
-        submitButton.disabled = true;
-        submitButton.querySelector('.button-text').style.display = 'none';
-        submitButton.querySelector('.loading-text').style.display = 'block';
-
-        // Get form data
-        const formData = new FormData(e.target);
-        const data = {
-            name: formData.get('name').trim(),
-            email: formData.get('email').trim(),
-            phone: formData.get('phone').trim(),
-            password: formData.get('password'),
-            terms: formData.get('terms') === 'on'
-        };
-
-        // Validate data
-        if (!data.terms) {
-            throw new Error('Please accept the terms and conditions');
-        }
-
-        const response = await fetch('{% url "store:register" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-        
-        if (response.ok && result.status === 'success') {
-            window.location.href = result.redirect_url;
-        } else {
-            throw new Error(result.message || 'Registration failed');
-        }
-    } catch (error) {
-        console.error('Registration error:', error);
-        errorContainer.style.display = 'block';
-        errorMessage.textContent = error.message || 'Registration failed. Please try again.';
-    } finally {
-        submitButton.disabled = false;
-        submitButton.querySelector('.button-text').style.display = 'block';
-        submitButton.querySelector('.loading-text').style.display = 'none';
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    new RegisterForm();
 });
 </script>
 {% endblock %}

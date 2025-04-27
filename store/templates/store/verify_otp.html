@@ -336,106 +336,75 @@ body {
             const form = document.getElementById('verify-form');
             const otpInputs = document.querySelectorAll('.otp-input');
             const completeOtp = document.getElementById('complete-otp');
-            const resendBtn = document.getElementById('resend-btn');
-            const timerDisplay = document.getElementById('timer');
             
-            // Start timer
-            let timeLeft = 60;
-            const timer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    resendBtn.disabled = false;
-                    timerDisplay.style.display = 'none';
-                } else {
-                    timerDisplay.textContent = `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}`;
-                }
-            }, 1000);
-
             // OTP input handling
             otpInputs.forEach((input, index) => {
                 input.addEventListener('input', (e) => {
-                    if (e.target.value.length === 1) {
-                        if (index < otpInputs.length - 1) otpInputs[index + 1].focus();
-                        updateCompleteOtp();
+                    const value = e.target.value;
+                    
+                    // Only allow numbers
+                    if (!/^\d*$/.test(value)) {
+                        e.target.value = '';
+                        return;
                     }
+                    
+                    if (value.length === 1) {
+                        input.classList.add('filled');
+                        if (index < otpInputs.length - 1) {
+                            otpInputs[index + 1].focus();
+                        }
+                    } else {
+                        input.classList.remove('filled');
+                    }
+                    
+                    // Update hidden input with complete OTP
+                    completeOtp.value = Array.from(otpInputs)
+                        .map(input => input.value)
+                        .join('');
                 });
 
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Backspace' && !e.target.value && index > 0) {
                         otpInputs[index - 1].focus();
+                        otpInputs[index - 1].value = '';
+                        otpInputs[index - 1].classList.remove('filled');
                     }
                 });
             });
 
-            function updateCompleteOtp() {
-                completeOtp.value = Array.from(otpInputs).map(input => input.value).join('');
-            }
-
             // Form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                
                 const submitBtn = this.querySelector('button[type="submit"]');
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
+                submitBtn.textContent = 'Verifying...';
+                
                 try {
                     const response = await fetch(this.action, {
                         method: 'POST',
                         body: new FormData(this),
                         headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
 
                     const data = await response.json();
+                    
                     if (data.status === 'success') {
                         showMessage('Verification successful! Redirecting...', 'success');
-                        setTimeout(() => window.location.href = data.redirect_url, 1500);
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
                     } else {
-                        showMessage(data.message, 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Verify OTP';
+                        throw new Error(data.message || 'Verification failed');
                     }
                 } catch (error) {
-                    showMessage('An error occurred. Please try again.', 'error');
+                    showMessage(error.message, 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Verify OTP';
                 }
-            });
-
-            // Resend OTP
-            resendBtn.addEventListener('click', async function() {
-                if (this.disabled) return;
-                
-                this.disabled = true;
-                const originalText = this.textContent;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-
-                try {
-                    const response = await fetch('{% url "store:send_otp" %}', {
-                        method: 'POST',
-                        body: new FormData(form),
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        }
-                    });
-
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        showMessage('New OTP sent successfully!', 'success');
-                        timeLeft = 60;
-                        timerDisplay.style.display = 'inline';
-                    } else {
-                        showMessage(data.message, 'error');
-                        this.disabled = false;
-                    }
-                } catch (error) {
-                    showMessage('Failed to resend OTP. Please try again.', 'error');
-                    this.disabled = false;
-                }
-
-                this.textContent = originalText;
             });
         });
 

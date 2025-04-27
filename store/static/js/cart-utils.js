@@ -1,82 +1,173 @@
-const CartUtils = {
-    async checkStock(productId, quantity, variantId = null) {
+window.cartUtils = {
+    getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content;
+    },
+
+    updateCartUI(cartData) {
+        // Get all cart elements
+        const desktopCount = document.getElementById('cart-count');
+        const desktopTotal = document.getElementById('cart-total');
+        const mobileCount = document.getElementById('mobile-cart-count');
+        
+        const totalItems = cartData.total_items || 0;
+        const totalAmount = cartData.total_amount || '0.00';
+        const formattedTotal = `₹${totalAmount}`;
+
+        // Update cart counts with animation
+        [desktopCount, mobileCount].forEach(element => {
+            if (element) {
+                element.textContent = totalItems;
+                this.animateElement(element, 'bounce');
+            }
+        });
+
+        // Update cart total with animation
+        if (desktopTotal) {
+            desktopTotal.textContent = formattedTotal;
+            this.animateElement(desktopTotal, 'highlight');
+        }
+    },
+
+    animateElement(element, className) {
+        if (!element) return;
+        element.classList.remove(className);
+        void element.offsetWidth; // Trigger reflow
+        element.classList.add(className);
+        setTimeout(() => element.classList.remove(className), 300);
+    },
+
+    updateCartButton(button, isLoading, success = false) {
+        if (!button) return;
+        const originalText = button.dataset.originalText || 'Add to Cart';
+        
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        } else if (success) {
+            button.innerHTML = '<i class="fas fa-check"></i> Added!';
+            setTimeout(() => {
+                button.innerHTML = `<i class="fas fa-cart-plus"></i> ${originalText}`;
+                button.disabled = false;
+            }, 2000);
+        } else {
+            button.innerHTML = `<i class="fas fa-cart-plus"></i> ${originalText}`;
+            button.disabled = false;
+        }
+    },
+
+    async addToCart(productId, quantity) {
         try {
-            const response = await fetch('/api/stock/check/', {
+            // Validate quantity before sending request
+            const quantitySelector = document.querySelector(`.quantity-selector[data-product-id="${productId}"]`);
+            if (quantitySelector) {
+                const input = quantitySelector.querySelector('.quantity-input');
+                const maxStock = parseInt(input.dataset.maxStock);
+                quantity = Math.min(Math.max(1, quantity), maxStock);
+            }
+
+            const response = await fetch('/add-to-cart/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-CSRFToken': this.getCsrfToken()
                 },
-                body: JSON.stringify({
-                    product_id: productId,
-                    variant_id: variantId,
-                    quantity: quantity
-                })
+                body: JSON.stringify({ product_id: productId, quantity: quantity })
             });
-            return await response.json();
+
+            const data = await response.json();
+            if (data.success) {
+                this.updateCartUI(data.cart);
+                return data;
+            }
+            throw new Error(data.message || 'Failed to add to cart');
         } catch (error) {
-            console.error('Stock check failed:', error);
+            console.error('Error adding to cart:', error);
             throw error;
         }
     },
 
-    updateCartUI(cartData) {
-        const elements = {
-            counts: document.querySelectorAll('.cart-count'),
-            totals: document.querySelectorAll('.cart-total'),
-            mobileCount: document.getElementById('mobile-cart-count')
-        };
-
-        // Format currency
-        const formattedTotal = new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR'
-        }).format(cartData.total_amount);
-
-        // Update counts with animation
-        elements.counts.forEach(count => {
-            count.textContent = cartData.total_items;
-            count.classList.add('bounce');
-            setTimeout(() => count.classList.remove('bounce'), 300);
+    initQuantityControls() {
+        document.querySelectorAll('.quantity-selector').forEach(selector => {
+            const input = selector.querySelector('.quantity-input');
+            const decreaseBtn = selector.querySelector('.decrease');
+            const increaseBtn = selector.querySelector('.increase');
+            
+            if (!input || !decreaseBtn || !increaseBtn) return;
+            
+            const maxStock = parseInt(input.dataset.maxStock) || 1;
+            
+            // Decrease button handler
+            decreaseBtn.addEventListener('click', () => {
+                let value = parseInt(input.value);
+                if (value > 1) {
+                    input.value = value - 1;
+                    this.updateQuantityState(selector);
+                }
+            });
+            
+            // Increase button handler
+            increaseBtn.addEventListener('click', () => {
+                let value = parseInt(input.value);
+                if (value < maxStock) {
+                    input.value = value + 1;
+                    this.updateQuantityState(selector);
+                }
+            });
+            
+            // Input change handler
+            input.addEventListener('change', () => {
+                let value = parseInt(input.value);
+                if (isNaN(value) || value < 1) {
+                    input.value = 1;
+                } else if (value > maxStock) {
+                    input.value = maxStock;
+                }
+                this.updateQuantityState(selector);
+            });
         });
-
-        // Update totals
-        elements.totals.forEach(total => {
-            total.textContent = formattedTotal;
-        });
-
-        // Update mobile count if exists
-        if (elements.mobileCount) {
-            elements.mobileCount.textContent = cartData.total_items;
-        }
-
-        // Dispatch event for other components
-        document.dispatchEvent(new CustomEvent('cartUpdated', {
-            detail: cartData
-        }));
     },
 
-    showNotification(message, type = 'success') {
-        const container = document.getElementById('cart-notifications');
-        if (!container) return;
+    updateQuantityState(selector) {
+        const input = selector.querySelector('.quantity-input');
+        const decreaseBtn = selector.querySelector('.decrease');
+        const increaseBtn = selector.querySelector('.increase');
+        const currentValue = parseInt(input.value);
+        const maxStock = parseInt(input.dataset.maxStock);
 
-        const notification = document.createElement('div');
-        notification.className = `cart-notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                          type === 'warning' ? 'exclamation-triangle' : 
-                          'exclamation-circle'}"></i>
-            <span>${message}</span>
-        `;
-
-        container.appendChild(notification);
-        requestAnimationFrame(() => notification.classList.add('show'));
-
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        // Update buttons state
+        if (decreaseBtn) {
+            decreaseBtn.disabled = currentValue <= 1;
+        }
+        if (increaseBtn) {
+            increaseBtn.disabled = currentValue >= maxStock;
+        }
     }
 };
 
-window.CartUtils = CartUtils;
+// Initialize styles for animations
+const style = document.createElement('style');
+style.textContent = `
+    .bounce {
+        animation: bounce 0.3s ease;
+    }
+    
+    .highlight {
+        animation: highlight 0.3s ease;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+    
+    @keyframes highlight {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize quantity controls when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    cartUtils.initQuantityControls();
+});

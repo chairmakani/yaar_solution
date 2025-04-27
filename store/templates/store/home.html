@@ -199,7 +199,8 @@ Home
                                 <button class="add-to-cart-btn btn" 
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
-                                        data-stock="{{ product.stock }}">
+                                        data-stock="{{ product.stock }}"
+                                        data-original-text="Add to Cart">
                                     <i class="fas fa-cart-plus"></i> Add to Cart
                                 </button>
                             {% else %}
@@ -244,10 +245,12 @@ Home
 
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'js/product_detail.js' %}"> </script>
-<script src="{% static 'js/shop.js' %}"></script>
-<script src="{% static 'js/cart-manager.js' %}"></script>
+<!-- Load utilities first -->
 <script src="{% static 'js/cart-utils.js' %}"></script>
+<!-- Then load dependent scripts -->
+<script src="{% static 'js/product_detail.js' %}"></script>
+<script src="{% static 'js/cart-manager.js' %}"></script>
+<script src="{% static 'js/shop.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -284,6 +287,35 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('Price slider initialization failed:', error);
         }
     }
+
+    // Add to cart functionality
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const productId = this.dataset.productId;
+            const quantityInput = this.closest('.product-actions')
+                                    .querySelector('.quantity-input');
+            const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+            try {
+                cartUtils.updateCartButton(this, true);
+                const response = await cartUtils.addToCart(productId, quantity);
+                if (response.success) {
+                    cartUtils.updateCartButton(this, false, true);
+                    // Update cart count if needed
+                    if (typeof updateCartCount === 'function') {
+                        updateCartCount(response.cart_count);
+                    }
+                } else {
+                    throw new Error(response.message || 'Failed to add to cart');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                cartUtils.updateCartButton(this, false);
+                alert('Failed to add item to cart. Please try again.');
+            }
+        });
+    });
 });
 </script>
 {% endblock extra_js %}
