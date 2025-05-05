@@ -1,6 +1,6 @@
 # 🛍️ E-Commerce Platform
 
-> 🚀 **Project Status:** Completed  
+> 🚀 **Project Status:** 90%  
 > ⚠️ **Note:** This repository contains the complete source code for an **E-commerce platform** developed with Django for the backend, and HTML, CSS, and JavaScript for the frontend.
 
 ## 📌 Project Overview
