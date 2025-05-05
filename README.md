@@ -140,3 +140,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Questions?
 
 If you have any questions, issues, or feedback, feel free to create an issue or contact us directly.
+
+---
+
+## 📬 Contact
+- **Email**: [mohamedanwar.asraf@gmail.com](mailto:mohamedanwar.asraf@gmail.com)
+- **GitHub**: [@MohamedAnwar070](https://github.com/MohamedAnwar070)
